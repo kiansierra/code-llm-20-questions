@@ -1,14 +1,15 @@
 import os
+from pathlib import Path
 
 import hydra
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
 import wandb
-from pathlib import Path
-import llm_20q.resolvers   
 
 load_dotenv()
+
 
 @hydra.main(config_path="llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
 def main(config: DictConfig) -> None:
@@ -17,7 +18,7 @@ def main(config: DictConfig) -> None:
     os.makedirs(config.output_dir, exist_ok=True)
     OmegaConf.save(config, os.path.join(config.output_dir, "config.yaml"))
     raw_config = OmegaConf.to_container(config, resolve=True)
-    run = wandb.init(config=raw_config, tags=['upload', model_name])
+    run = wandb.init(config=raw_config, tags=["upload", model_name])
     save_dir = Path(config.output_dir).parent
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(**config.model)

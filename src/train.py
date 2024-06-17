@@ -3,6 +3,7 @@ from typing import Literal
 
 import hydra
 import pandas as pd
+from accelerate import PartialState
 from datasets import Dataset
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
@@ -17,7 +18,6 @@ from llm_20q.data import (build_answers_df, build_game_records,
                           build_guesses_df, build_question_df)
 from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
                            prepare_guess_messages)
-from accelerate import PartialState
 
 load_dotenv()
 
