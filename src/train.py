@@ -90,7 +90,6 @@ def main(config: DictConfig) -> None:
     questions_df = build_df(game_records, task)
     os.makedirs(config.output_dir, exist_ok=True)
     OmegaConf.save(config, os.path.join(config.output_dir, "config.yaml"))
-    raw_config = OmegaConf.to_container(config.lora, resolve=True)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token = tokenizer.eos_token
     questions_df["prompt"] = questions_df.apply(generate_prompt(tokenizer, task), axis=1)
@@ -115,7 +114,8 @@ def main(config: DictConfig) -> None:
     # dataset = dataset.filter(lambda x: x['input_length'] <= 1024)
     args = TrainingArguments(**config.trainer)
     if state.is_main_process:
-        run = wandb.init(project="llm-20q", config=raw_config, tags=[task, model_name])
+        raw_config = OmegaConf.to_container(config, resolve=True)
+        run = wandb.init(config=raw_config, tags=[task, model_name])
     state.wait_for_everyone()
     trainer = SFTTrainer(
         model=model,
