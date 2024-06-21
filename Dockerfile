@@ -10,6 +10,10 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt --target /libs
 
+RUN pip install -r requirements.txt 
+
 COPY . .
 
 RUN pip install . --target /libs
+
+RUN pip install -e . 
