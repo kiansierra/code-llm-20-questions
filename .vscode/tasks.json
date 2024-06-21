@@ -14,6 +14,16 @@
         }
       },
       {
+        "label": "docker-build-test",
+        "type": "shell",
+        "command": "docker build -f DockerfileTest . -t submission-test",
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
         "type": "docker-run",
         "label": "docker-run",
         "dependsOn": ["docker-build"],
@@ -23,12 +33,43 @@
           "command": "/bin/bash build.sh",
           "volumes": [
             {
-              "localPath": "${userHome}/.cache/huggingface",
-              "containerPath": "/root/.cache/huggingface"
+                "localPath": "${userHome}/.cache/huggingface",
+                "containerPath": "/root/.cache/huggingface",
+                "permissions": "ro"
+            },
+            {
+                "localPath": "${workspaceFolder}/subs",
+                "containerPath": "/build/subs",
+                "permissions": "rw"
             }
           ],
           
         },
-    }
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
+          }
+    },
+    {
+      "type": "docker-run",
+      "label": "docker-run-submission-test",
+      "dependsOn": ["docker-build-test"],
+      "dockerRun": {
+        "image": "submission-test",
+        "command": "/bin/bash test_submission.sh",
+        "volumes": [
+          {
+              "localPath": "${workspaceFolder}/subs",
+              "containerPath": "/storage",
+              "permissions": "ro"
+          }
+        ],
+        
+      },
+      "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+  }
     ]
   }

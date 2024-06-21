@@ -16,7 +16,7 @@ load_dotenv()
 
 @hydra.main(config_path="llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
 def main(config: DictConfig) -> None:
-    login(token=os.environ["HF_TOKEN"])
+    # login(token=os.environ["HF_TOKEN"])
     model_id = config.model.pretrained_model_name_or_path
     model_name = config.model_name
     os.makedirs(config.output_dir, exist_ok=True)

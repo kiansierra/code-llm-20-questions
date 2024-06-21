@@ -14,6 +14,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+RUN mkdir -p subs
+
 RUN pip install . --target /libs
 
 RUN pip install -e . 

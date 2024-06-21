@@ -1,0 +1,12 @@
+FROM gcr.io/kaggle-gpu-images/python:latest as base
+
+RUN apt install pigz pv 
+
+WORKDIR /subs
+
+RUN pip install --upgrade pip
+
+RUN pip install -U kaggle-environments
+
+COPY scripts/test_submission.py .
+COPY test_submission.sh .
