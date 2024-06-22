@@ -4,8 +4,6 @@ from pathlib import Path
 
 current_folder = Path(__file__).parent
 sys.path.append(str((current_folder / "libs").absolute()))
-import sys
-from pathlib import Path
 
 import torch
 from transformers import BitsAndBytesConfig, pipeline

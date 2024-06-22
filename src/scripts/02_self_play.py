@@ -6,7 +6,7 @@ import hydra
 import torch
 from kaggle_environments import make
 from loguru import logger
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from transformers import BitsAndBytesConfig, pipeline
 
 import wandb
@@ -18,7 +18,7 @@ DATASET_TYPE = "game_records"
 
 
 @hydra.main(config_path="../llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
-def main(config):
+def main(config: DictConfig) -> None:
 
     bnb_config = BitsAndBytesConfig(**config.quantization)
     model_name = config.model_name
@@ -35,16 +35,16 @@ def main(config):
     logger.info("Loaded Model succesfully")
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, tags=["generation", model_name])
-    ask_artifact = run.use_artifact(f"ask-{model_name}:latest", type="model")
+    ask_artifact = run.use_artifact(f"sft-ask-{model_name}:latest", type="model")
     ask_dir = ask_artifact.download()
-    guess_artifact = run.use_artifact(f"guess-{model_name}:latest", type="model")
+    guess_artifact = run.use_artifact(f"sft-guess-{model_name}:latest", type="model")
     guess_dir = guess_artifact.download()
     pipe.model.load_adapter(extract_last_checkpoint(Path(ask_dir)), adapter_name="ask")
     pipe.model.load_adapter(extract_last_checkpoint(Path(guess_dir)), adapter_name="guess")
     logger.info("Loaded Adapters succesfully")
     ask_terminators = [pipe.tokenizer.eos_token_id, *pipe.tokenizer.convert_tokens_to_ids(["<|eot_id|>", "?", "?."])]
 
-    def agent_fn(obs, cfg):
+    def agent_fn(obs, _):
         # if agent is guesser and turnType is "ask"
         if obs.turnType == "ask":
             pipe.model.set_adapter("ask")
@@ -83,8 +83,8 @@ def main(config):
     for _ in range(2):
         env = make("llm_20_questions", debug=True)
         game = env.run([agent_fn, agent_fn, agent_fn, agent_fn])
-        id = uuid.uuid4()
-        with open(save_folder / f"{id}.json", "w") as f:
+        game_id = uuid.uuid4()
+        with open(save_folder / f"{game_id}.json", "w", encoding="utf-8") as f:
             save_game = {"steps": game, "info": {"model": model_name}}
             json.dump(save_game, f)
     artifact = wandb.Artifact(OUTPUT_DATASET_NAME, type=DATASET_TYPE)

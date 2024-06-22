@@ -1,6 +1,6 @@
 model_org: meta-llama
 model_name: Meta-Llama-3-8B-Instruct
-task: ask
+task: guess
 output_dir: ../checkpoints/${model_name}/${task}
 
 quantization:
@@ -25,10 +25,10 @@ trainer:
   save_strategy: steps
   num_train_epochs: 1
   logging_steps: 5
-  save_steps: 10
+  save_steps: 20
   save_total_limit: 2
   eval_strategy: steps
-  eval_steps: 10
+  eval_steps: 20
   eval_accumulation_steps: 1
   bf16_full_eval: True
   load_best_model_at_end: True

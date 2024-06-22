@@ -6,6 +6,8 @@ WORKDIR /subs
 
 RUN pip install --upgrade pip
 
+RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia -y
+
 RUN pip install -U kaggle-environments
 
 RUN pip install pygame

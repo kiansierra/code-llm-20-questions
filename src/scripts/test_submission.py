@@ -14,7 +14,7 @@ def patched_connect(*args, **kwargs):
 socket.socket.connect = patched_connect
 
 
-def simple_verbose_agent1(obs, cfg):
+def simple_verbose_agent1(obs, _):
     # if agent is guesser and turnType is "ask"
     if obs.turnType == "ask":
         response = "Is it a duck?"

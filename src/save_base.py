@@ -4,7 +4,8 @@ import hydra
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
+from loguru import logger
+import llm_20q.resolvers  # noqa: F401
 import wandb
 
 load_dotenv()
@@ -19,11 +20,13 @@ def main(config: DictConfig) -> None:
     OmegaConf.save(config, os.path.join(config.output_dir, "config.yaml"))
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, tags=["upload", model_name])
-    ask_artifact = run.use_artifact(f"ask-{model_name}:latest", type="model")
     save_dir = "model"
+    ask_artifact = run.use_artifact(f"sft-ask-{model_name}:latest", type="model-sft")
     _ = ask_artifact.download(f"{save_dir}/ask")
-    guess_artifact = run.use_artifact(f"guess-{model_name}:latest", type="model")
+    logger.info("Downloaded ask model")
+    guess_artifact = run.use_artifact(f"sft-guess-{model_name}:latest", type="model-sft")
     _ = guess_artifact.download(f"{save_dir}/guess")
+    logger.info("Downloaded guess model")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model_cfg = OmegaConf.to_container(config.model, resolve=True)
     model_cfg.pop("attn_implementation", None)
