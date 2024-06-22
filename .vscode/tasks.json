@@ -64,6 +64,7 @@
               "permissions": "ro"
           }
         ],
+        "customOptions": "--gpus all"
         
       },
       "presentation": {
