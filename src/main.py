@@ -1,14 +1,19 @@
+# flake8-in-file-ignores: noqa: E402
 import sys
 from pathlib import Path
 
 current_folder = Path(__file__).parent
 sys.path.append(str((current_folder/ 'libs').absolute()))
+import sys
+from pathlib import Path
+
 import torch
 from transformers import BitsAndBytesConfig, pipeline
 
 from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
                            prepare_guess_messages)
-from llm_20q.utils import extract_last_checkpoint
+
+from llm_20q.utils.checkpoints import extract_last_checkpoint
 
 print("Loaded Imports succesfully")
 

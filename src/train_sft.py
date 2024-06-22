@@ -10,7 +10,7 @@ from peft import LoraConfig, prepare_model_for_kbit_training
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, PreTrainedTokenizer,
                           TrainingArguments)
-from trl import DataCollatorForCompletionOnlyLM, SFTTrainer
+from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, SFTConfig
 
 import wandb
 from llm_20q.data import TaskType
@@ -28,7 +28,7 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task:TaskType):
 
     def make_question_row(row):
         data = {
-            "questions": row["questions"] + [row["question"]],
+            "questions": list(row["questions"]) + [row["question"]],
             "answers": row["answers"],
             "guesses": row["guesses"],
         }
@@ -39,7 +39,7 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task:TaskType):
     def make_answer_row(row):
         data = {
             "questions": row["questions"],
-            "answers": row["answers"] + [row["answer"]],
+            "answers": list(row["answers"]) + [row["answer"]],
             "keyword": row["keyword"],
             "category": row["category"],
         }
@@ -51,7 +51,7 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task:TaskType):
         data = {
             'questions': row['questions'],
             'answers': row['answers'] ,
-            'guesses': row['guesses'] + [row['guess']],   
+            'guesses': list(row['guesses']) + [row['guess']],   
         }
         conversation = prepare_guess_messages(**data)
         prompt = tokenizer.apply_chat_template(conversation, tokenize=False)
@@ -111,7 +111,8 @@ def main(config: DictConfig) -> None:
     datasets = datasets.map(lambda x: tokenizer(x["prompt"]))
     datasets = datasets.map(lambda x: {'input_length': len(x['input_ids'])})
     # dataset = dataset.filter(lambda x: x['input_length'] <= 1024)
-    args = TrainingArguments(**config.trainer)
+    max_seq_length = max(datasets['train']['input_length'] + datasets['validation']['input_length'])
+    args = SFTConfig(**config.trainer, max_seq_length=max_seq_length)
 
     state.wait_for_everyone()
     trainer = SFTTrainer(
@@ -124,7 +125,7 @@ def main(config: DictConfig) -> None:
     )
     trainer.train()
     if state.is_main_process:
-        model_artifact = wandb.Artifact(f"{task}-{model_name}", type=OUTPUT_DATASET_TYPE, metadata={"task": task})
+        model_artifact = wandb.Artifact(f"sft-{task}-{model_name}", type=OUTPUT_DATASET_TYPE, metadata={"task": task})
         model_artifact.add_dir(config.output_dir)
         run.log_artifact(model_artifact)
         run.finish()

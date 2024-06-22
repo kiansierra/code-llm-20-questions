@@ -20,7 +20,7 @@
             "args": [
                 "--config_file",
                 "./src/acc-configs/ddp.json",
-                "src/train.py"
+                "src/train_sft.py"
             ],
             "console": "integratedTerminal",
             "justMyCode": false

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 import wandb
 
 DATASET_TYPE  = "replay-games"
