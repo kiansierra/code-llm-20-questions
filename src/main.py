@@ -2,8 +2,16 @@
 import sys
 from pathlib import Path
 
-current_folder = Path(__file__).parent
-sys.path.append(str((current_folder / "libs").absolute()))
+agent_path = Path("/kaggle_simulations/agent")
+
+if agent_path.exists():
+    lib_path = agent_path / "libs"
+    sys.path.append(0, str(lib_path.absolute()))
+    
+else:
+    agent_path = Path(__file__).parent
+    lib_path = agent_path / "libs"
+    sys.path.append(str((agent_path / "libs").absolute()))
 
 import torch
 from transformers import BitsAndBytesConfig, pipeline
@@ -22,7 +30,7 @@ quantization_config = BitsAndBytesConfig(
     }
 )
 
-model_dir = (current_folder / "model").absolute()
+model_dir = (agent_path / "model").absolute()
 pipe = pipeline(
     "conversational",
     model=model_dir,

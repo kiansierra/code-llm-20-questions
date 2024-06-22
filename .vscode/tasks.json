@@ -60,7 +60,7 @@
         "volumes": [
           {
               "localPath": "${workspaceFolder}/subs",
-              "containerPath": "/storage",
+              "containerPath": "/kaggle_simulations/agent",
               "permissions": "ro"
           }
         ],

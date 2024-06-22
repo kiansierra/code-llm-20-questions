@@ -14,3 +14,5 @@ RUN pip install pygame
 
 COPY src/scripts/test_submission.py .
 COPY test_submission.sh .
+
+RUN mkdir -p /kaggle_simulations/agent

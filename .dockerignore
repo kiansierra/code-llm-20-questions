@@ -11,7 +11,8 @@ wandb/*
 */wandb/*
 artifacts/*
 */artifacts/*
-/data/*
+data/*
+subs/*
 # Ignore Used checkpoints
 *.pth
 *.bin

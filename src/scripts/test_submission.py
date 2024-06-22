@@ -30,6 +30,6 @@ def simple_verbose_agent1(obs, _):
 if __name__ == "__main__":
     env = make("llm_20_questions")
     game_output = env.run(
-        agents=[simple_verbose_agent1, simple_verbose_agent1, simple_verbose_agent1, "/subs/main.py"]
+        agents=[simple_verbose_agent1, simple_verbose_agent1, simple_verbose_agent1, "/kaggle_simulations/agent/main.py"]
     )
     print("Game output: ", game_output)
