@@ -6,7 +6,7 @@ import pandas as pd
 
 __all__ = ["build_game_records", "build_df", "TaskType"]
 
-TaskType = Literal['ask', 'answer', 'guess']
+TaskType = Literal["ask", "answer", "guess"]
 
 
 def build_game_records(folder: str) -> list[dict]:
@@ -85,14 +85,15 @@ def build_guesses_df(games: list[dict]) -> pd.DataFrame:
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     return games_df
 
-def build_df(games: list[dict], task:TaskType) -> pd.DataFrame:
-    
+
+def build_df(games: list[dict], task: TaskType) -> pd.DataFrame:
+
     match task:
-        case 'ask':
+        case "ask":
             return build_question_df(games)
-        case 'answer':
+        case "answer":
             return build_answers_df(games)
-        case 'guess':
+        case "guess":
             return build_guesses_df(games)
         case _:
             raise ValueError(f"Invalid task type: {task}")
