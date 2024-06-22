@@ -9,11 +9,12 @@ def patched_connect(*args, **kwargs):
     # If you test unconnectable situations
     # it can stay like this
     print("socket.connect() is disabled")
-    
+
+
 socket.socket.connect = patched_connect
 
+
 def simple_verbose_agent1(obs, cfg):
-    
     # if agent is guesser and turnType is "ask"
     if obs.turnType == "ask":
         response = "Is it a duck?"
@@ -23,8 +24,12 @@ def simple_verbose_agent1(obs, cfg):
     # if agent is the answerer
     elif obs.turnType == "answer":
         response = "no"
-        
+    return response
+
+
 if __name__ == "__main__":
     env = make("llm_20_questions")
-    game_output = env.run(agents=[simple_verbose_agent1,simple_verbose_agent1, simple_verbose_agent1, "/subs/main.py"])
+    game_output = env.run(
+        agents=[simple_verbose_agent1, simple_verbose_agent1, simple_verbose_agent1, "/subs/main.py"]
+    )
     print("Game output: ", game_output)

@@ -8,9 +8,8 @@ from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig, PreTrainedTokenizer,
-                          TrainingArguments)
-from trl import DataCollatorForCompletionOnlyLM, SFTTrainer, SFTConfig
+                          BitsAndBytesConfig, PreTrainedTokenizer)
+from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import wandb
 from llm_20q.data import TaskType

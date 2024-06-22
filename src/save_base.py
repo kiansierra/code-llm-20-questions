@@ -19,18 +19,17 @@ def main(config: DictConfig) -> None:
     OmegaConf.save(config, os.path.join(config.output_dir, "config.yaml"))
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, tags=["upload", model_name])
-    ask_artifact = run.use_artifact(f'ask-{model_name}:latest', type='model')
-    save_dir = 'model'
-    ask_dir = ask_artifact.download(f'{save_dir}/ask')
-    guess_artifact = run.use_artifact(f'guess-{model_name}:latest', type='model')
-    guess_dir = guess_artifact.download(f'{save_dir}/guess')
+    ask_artifact = run.use_artifact(f"ask-{model_name}:latest", type="model")
+    save_dir = "model"
+    _ = ask_artifact.download(f"{save_dir}/ask")
+    guess_artifact = run.use_artifact(f"guess-{model_name}:latest", type="model")
+    _ = guess_artifact.download(f"{save_dir}/guess")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model_cfg = OmegaConf.to_container(config.model, resolve=True)
     model_cfg.pop("attn_implementation", None)
     model = AutoModelForCausalLM.from_pretrained(**model_cfg)
     tokenizer.save_pretrained(save_dir)
     model.save_pretrained(save_dir)
-
 
 
 if __name__ == "__main__":

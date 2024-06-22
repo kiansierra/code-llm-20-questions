@@ -10,70 +10,73 @@ from omegaconf import OmegaConf
 from transformers import BitsAndBytesConfig, pipeline
 
 import wandb
-from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
-                           prepare_guess_messages)
+from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils import extract_last_checkpoint
 
 OUTPUT_DATASET_NAME = "self-play-games"
 DATASET_TYPE = "game_records"
 
+
 @hydra.main(config_path="../llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
 def main(config):
-    
+
     bnb_config = BitsAndBytesConfig(**config.quantization)
     model_name = config.model_name
     pipe = pipeline(
-                "conversational",
-                model=config.model.pretrained_model_name_or_path,
-                model_kwargs={"torch_dtype": config.model.torch_dtype,
-                            'quantization_config': bnb_config,
-                            "attn_implementation": config.model.attn_implementation,
-                            },
-                device_map="auto",
-            )
+        "conversational",
+        model=config.model.pretrained_model_name_or_path,
+        model_kwargs={
+            "torch_dtype": config.model.torch_dtype,
+            "quantization_config": bnb_config,
+            "attn_implementation": config.model.attn_implementation,
+        },
+        device_map="auto",
+    )
     logger.info("Loaded Model succesfully")
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, tags=["generation", model_name])
-    ask_artifact = run.use_artifact(f'ask-{model_name}:latest', type='model')
+    ask_artifact = run.use_artifact(f"ask-{model_name}:latest", type="model")
     ask_dir = ask_artifact.download()
-    guess_artifact = run.use_artifact(f'guess-{model_name}:latest', type='model')
+    guess_artifact = run.use_artifact(f"guess-{model_name}:latest", type="model")
     guess_dir = guess_artifact.download()
     pipe.model.load_adapter(extract_last_checkpoint(Path(ask_dir)), adapter_name="ask")
     pipe.model.load_adapter(extract_last_checkpoint(Path(guess_dir)), adapter_name="guess")
     logger.info("Loaded Adapters succesfully")
-    ask_terminators = [pipe.tokenizer.eos_token_id,
-                *pipe.tokenizer.convert_tokens_to_ids(["<|eot_id|>", "?", "?."])]
+    ask_terminators = [pipe.tokenizer.eos_token_id, *pipe.tokenizer.convert_tokens_to_ids(["<|eot_id|>", "?", "?."])]
 
     def agent_fn(obs, cfg):
         # if agent is guesser and turnType is "ask"
         if obs.turnType == "ask":
-            pipe.model.set_adapter('ask')
+            pipe.model.set_adapter("ask")
             conversation = prepare_ask_messages(obs.questions, obs.answers, obs.guesses)
             output = pipe(conversation, eos_token_id=ask_terminators)
-            response = output[-1]['content']
+            response = output[-1]["content"]
         # if agent is guesser and turnType is "guess"
         elif obs.turnType == "guess":
-            pipe.model.set_adapter('guess')
+            pipe.model.set_adapter("guess")
             conversation = prepare_guess_messages(obs.questions, obs.answers, obs.guesses)
             output = pipe(conversation)
-            response = output[-1]['content']
+            response = output[-1]["content"]
         # if agent is the answerer
         elif obs.turnType == "answer":
             pipe.model.disable_adapters()
             yesno_words = ["yes", "no"]
             yes_no_ids = pipe.tokenizer.convert_tokens_to_ids(yesno_words)
-            conversation = prepare_answer_messages(keyword=obs['keyword'],
-                                                category=obs['category'],
-                                                questions=obs.questions, answers=obs.answers)
-            input_ids = pipe.tokenizer.apply_chat_template(conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+            conversation = prepare_answer_messages(
+                keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers
+            )
+            input_ids = pipe.tokenizer.apply_chat_template(
+                conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt"
+            )
             with torch.no_grad():
                 logits = pipe.model(input_ids).logits
             position = logits[0, -1, yes_no_ids].argmax()
             response = yesno_words[position]
         return response
+
     save_folder = Path(f"../input/self-play/{model_name}")
     save_folder.mkdir(parents=True, exist_ok=True)
-    
+
     env = make("llm_20_questions", debug=True)
     game = env.run([agent_fn, agent_fn, agent_fn, agent_fn])
 
@@ -81,15 +84,14 @@ def main(config):
         env = make("llm_20_questions", debug=True)
         game = env.run([agent_fn, agent_fn, agent_fn, agent_fn])
         id = uuid.uuid4()
-        with open(save_folder/f'{id}.json', 'w') as f:
+        with open(save_folder / f"{id}.json", "w") as f:
             save_game = {"steps": game, "info": {"model": model_name}}
             json.dump(save_game, f)
     artifact = wandb.Artifact(OUTPUT_DATASET_NAME, type=DATASET_TYPE)
     artifact.add_dir(save_folder.absolute())
     run.log_artifact(artifact)
     run.finish()
-    
-    
-if __name__ == "__main__":
-    main() # pylint: disable=no-value-for-parameter
 
+
+if __name__ == "__main__":
+    main()  # pylint: disable=no-value-for-parameter
