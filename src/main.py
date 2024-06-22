@@ -4,8 +4,11 @@ current_folder = Path(__file__).parent
 sys.path.append(str((current_folder/ 'libs').absolute()))
 from transformers import  pipeline, BitsAndBytesConfig
 from llm_20q.model import prepare_ask_messages, prepare_answer_messages, prepare_guess_messages
+from llm_20q.utils import extract_last_checkpoint
 import torch
+
 print("Loaded Imports succesfully")
+
 quantization_config = BitsAndBytesConfig(**{
     'load_in_4bit': True,
     'bnb_4bit_quant_type': "nf4",
@@ -13,7 +16,7 @@ quantization_config = BitsAndBytesConfig(**{
     'bnb_4bit_use_double_quant': True
 })
 
-model_dir = (current_folder).absolute()
+model_dir = (current_folder / 'model').absolute()
 pipe = pipeline(
             "conversational",
             model=model_dir,
@@ -22,8 +25,8 @@ pipe = pipeline(
             device_map="auto",
         )
 print("Loaded Model succesfully")
-pipe.model.load_adapter("{model_dir}/ask/checkpoint-80", adapter_name="ask")
-pipe.model.load_adapter("{model_dir}/guess/checkpoint-70", adapter_name="guess")
+pipe.model.load_adapter(extract_last_checkpoint(model_dir/ 'ask'), adapter_name="ask")
+pipe.model.load_adapter(extract_last_checkpoint(model_dir/ 'guess'), adapter_name="guess")
 print("Loaded Adapters succesfully")
 ask_terminators = [pipe.tokenizer.eos_token_id,
                *pipe.tokenizer.convert_tokens_to_ids(["<|eot_id|>", "?", "?."])]
