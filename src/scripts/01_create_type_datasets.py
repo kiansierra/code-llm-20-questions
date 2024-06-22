@@ -21,7 +21,7 @@ def main() -> None:
         save_path = save_folder/f"{task}.parquet"
         task_df.to_parquet(save_path)
         artifact = wandb.Artifact(f"{OUTPUT_DATASET_NAME}-{task}", type=DATASET_TYPE)
-        artifact.add_file(save_path.absolute(), f"{task}-df")
+        artifact.add_file(save_path.absolute(), f"{task}.parquet")
         run.log_artifact(artifact)
     run.finish()
     
