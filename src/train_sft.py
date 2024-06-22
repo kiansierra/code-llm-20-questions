@@ -110,7 +110,6 @@ def main(config: DictConfig) -> None:
                                 'validation': Dataset.from_pandas(val_df[["prompt"]])})
     datasets = datasets.map(lambda x: tokenizer(x["prompt"]))
     datasets = datasets.map(lambda x: {'input_length': len(x['input_ids'])})
-    # dataset = dataset.filter(lambda x: x['input_length'] <= 1024)
     max_seq_length = max(datasets['train']['input_length'] + datasets['validation']['input_length'])
     args = SFTConfig(**config.trainer, max_seq_length=max_seq_length)
 
