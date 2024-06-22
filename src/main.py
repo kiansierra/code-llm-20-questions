@@ -1,11 +1,14 @@
-from pathlib import Path
 import sys
+from pathlib import Path
+
 current_folder = Path(__file__).parent
 sys.path.append(str((current_folder/ 'libs').absolute()))
-from transformers import  pipeline, BitsAndBytesConfig
-from llm_20q.model import prepare_ask_messages, prepare_answer_messages, prepare_guess_messages
-from llm_20q.utils import extract_last_checkpoint
 import torch
+from transformers import BitsAndBytesConfig, pipeline
+
+from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
+                           prepare_guess_messages)
+from llm_20q.utils import extract_last_checkpoint
 
 print("Loaded Imports succesfully")
 

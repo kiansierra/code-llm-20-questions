@@ -1,10 +1,9 @@
 import os
-from typing import Literal
 
 import hydra
 import pandas as pd
 from accelerate import PartialState
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
@@ -14,7 +13,7 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer
 
 import wandb
-from llm_20q.data import build_df, build_game_records,TaskType
+from llm_20q.data import TaskType
 from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
                            prepare_guess_messages)
 
@@ -22,6 +21,8 @@ load_dotenv()
 
 INPUT_DATASET_NAME = "replay-dataframe"
 INPUT_DATASET_TYPE = "replay-games"
+OUTPUT_DATASET_TYPE = "model-sft"
+
 
 def generate_prompt(tokenizer: PreTrainedTokenizer, task:TaskType):
 
@@ -102,9 +103,13 @@ def main(config: DictConfig) -> None:
     collate_fn = DataCollatorForCompletionOnlyLM(
         tokenizer=tokenizer, pad_to_multiple_of=8, response_template=response_template
     )
-    dataset = Dataset.from_pandas(games_df[["prompt"]])
-    dataset = dataset.map(lambda x: tokenizer(x["prompt"]))
-    dataset = dataset.map(lambda x: {'input_length': len(x['input_ids'])})
+    train_df = games_df.query("split == 'train'").reset_index(drop=True)
+    val_df = games_df.query("split == 'validation'").reset_index(drop=True)
+    
+    datasets = DatasetDict({'train': Dataset.from_pandas(train_df[["prompt"]]),
+                                'validation': Dataset.from_pandas(val_df[["prompt"]])})
+    datasets = datasets.map(lambda x: tokenizer(x["prompt"]))
+    datasets = datasets.map(lambda x: {'input_length': len(x['input_ids'])})
     # dataset = dataset.filter(lambda x: x['input_length'] <= 1024)
     args = TrainingArguments(**config.trainer)
 
@@ -113,13 +118,13 @@ def main(config: DictConfig) -> None:
         model=model,
         data_collator=collate_fn,
         peft_config=peft_config,
-        train_dataset=dataset,
-        eval_dataset=dataset,
+        train_dataset=datasets['train'],
+        eval_dataset=datasets['validation'],
         args=args
     )
     trainer.train()
     if state.is_main_process:
-        model_artifact = wandb.Artifact(f"{task}-{model_name}", type="model", metadata={"task": task})
+        model_artifact = wandb.Artifact(f"{task}-{model_name}", type=OUTPUT_DATASET_TYPE, metadata={"task": task})
         model_artifact.add_dir(config.output_dir)
         run.log_artifact(model_artifact)
         run.finish()

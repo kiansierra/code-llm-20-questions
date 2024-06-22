@@ -1,6 +1,7 @@
-import wandb
-from dotenv import load_dotenv
 from pathlib import Path
+
+
+import wandb
 
 DATASET_TYPE  = "replay-games"
 DATASET_NAME = "replay-records"

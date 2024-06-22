@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def extract_last_checkpoint(checkpoint_dir: Path) -> Path:
     """Extract the last checkpoint from a directory."""
     checkpoints = list(checkpoint_dir.glob("checkpoint-*"))

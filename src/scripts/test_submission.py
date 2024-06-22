@@ -1,5 +1,6 @@
-from kaggle_environments import make
 import socket
+
+from kaggle_environments import make
 
 
 def patched_connect(*args, **kwargs):

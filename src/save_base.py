@@ -1,15 +1,11 @@
 import os
-from pathlib import Path
 
 import hydra
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import llm_20q.resolvers
-import wandb
-from huggingface_hub import HfApi
-from huggingface_hub.commands.user import login
 
+import wandb
 
 load_dotenv()
 

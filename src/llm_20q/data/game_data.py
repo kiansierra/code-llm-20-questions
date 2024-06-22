@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Literal
+
 import pandas as pd
 
 __all__ = ["build_game_records", "build_df", "TaskType"]
