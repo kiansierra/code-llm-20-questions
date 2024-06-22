@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
-
+from typing import Literal
 import pandas as pd
 
-__all__ = ["build_game_records", "build_question_df", "build_answers_df", "build_guesses_df"]
+__all__ = ["build_game_records", "build_df", "TaskType"]
+
+TaskType = Literal['ask', 'answer', 'guess']
 
 
 def build_game_records(folder: str) -> list[dict]:
@@ -81,3 +83,15 @@ def build_guesses_df(games: list[dict]) -> pd.DataFrame:
     games_df["guess"] = games_df.apply(lambda x: x["guesses"][x["position"]], axis=1)
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     return games_df
+
+def build_df(games: list[dict], task:TaskType) -> pd.DataFrame:
+    
+    match task:
+        case 'ask':
+            return build_question_df(games)
+        case 'answer':
+            return build_answers_df(games)
+        case 'guess':
+            return build_guesses_df(games)
+        case _:
+            raise ValueError(f"Invalid task type: {task}")
