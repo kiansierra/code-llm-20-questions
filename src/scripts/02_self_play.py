@@ -11,7 +11,8 @@ from omegaconf import OmegaConf
 import wandb
 import uuid
 
-
+OUTPUT_DATASET_NAME = "self-play-games"
+DATASET_TYPE = "game_records"
 
 @hydra.main(config_path="../llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
 def main(config):
@@ -80,8 +81,12 @@ def main(config):
         with open(save_folder/f'{id}.json', 'w') as f:
             save_game = {"steps": game, "info": {"model": model_name}}
             json.dump(save_game, f)
+    artifact = wandb.Artifact(OUTPUT_DATASET_NAME, type=DATASET_TYPE)
+    artifact.add_dir(save_folder.absolute())
+    run.log_artifact(artifact)
+    run.finish()
     
     
 if __name__ == "__main__":
-    main()
+    main() # pylint: disable=no-value-for-parameter
 

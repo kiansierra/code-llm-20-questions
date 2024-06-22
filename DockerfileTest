@@ -8,5 +8,7 @@ RUN pip install --upgrade pip
 
 RUN pip install -U kaggle-environments
 
+RUN pip install pygame
+
 COPY src/scripts/test_submission.py .
 COPY test_submission.sh .
