@@ -8,5 +8,5 @@ RUN pip install --upgrade pip
 
 RUN pip install -U kaggle-environments
 
-COPY scripts/test_submission.py .
+COPY src/scripts/test_submission.py .
 COPY test_submission.sh .
