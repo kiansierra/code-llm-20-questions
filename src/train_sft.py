@@ -87,14 +87,17 @@ def main(config: DictConfig) -> None:
     tokenizer.pad_token = tokenizer.eos_token
     games_df["prompt"] = games_df.apply(generate_prompt(tokenizer, task), axis=1)
     # QLoRA config
-    bnb_config = BitsAndBytesConfig(**config.quantization)
+    quantize = config.get('quantization', None)
+    if quantize:
+        bnb_config = BitsAndBytesConfig(**config.quantization)
 
     # LoRA config
     lora_config = OmegaConf.to_container(config.lora, resolve=True)
     peft_config = LoraConfig(**lora_config)
-    model = AutoModelForCausalLM.from_pretrained(
-        **config.model, quantization_config=bnb_config, device_map={"": state.process_index}
-    )
+    model_params = {**config.model, "device_map": {"": state.process_index}}
+    if quantize:
+        model_params["quantization_config"] = bnb_config
+    model = AutoModelForCausalLM.from_pretrained(**model_params)
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 
     response_template = "<|start_header_id|>assistant<|end_header_id|>"
