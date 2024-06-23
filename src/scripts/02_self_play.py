@@ -13,8 +13,8 @@ import wandb
 from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils import extract_last_checkpoint
 
-OUTPUT_DATASET_NAME = "self-play-games"
-DATASET_TYPE = "game_records"
+OUTPUT_DATASET_NAME = "self-play-records"
+DATASET_TYPE = "self-play"
 
 
 @hydra.main(config_path="../llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
@@ -34,10 +34,10 @@ def main(config: DictConfig) -> None:
     )
     logger.info("Loaded Model succesfully")
     raw_config = OmegaConf.to_container(config, resolve=True)
-    run = wandb.init(config=raw_config, tags=["generation", model_name])
-    ask_artifact = run.use_artifact(f"sft-ask-{model_name}:latest", type="model")
+    run = wandb.init(config=raw_config, tags=["generation", model_name], job_type="self-play")
+    ask_artifact = run.use_artifact(f"sft-ask-{model_name}:latest", type="model-sft")
     ask_dir = ask_artifact.download()
-    guess_artifact = run.use_artifact(f"sft-guess-{model_name}:latest", type="model")
+    guess_artifact = run.use_artifact(f"sft-guess-{model_name}:latest", type="model-sft")
     guess_dir = guess_artifact.download()
     pipe.model.load_adapter(extract_last_checkpoint(Path(ask_dir)), adapter_name="ask")
     pipe.model.load_adapter(extract_last_checkpoint(Path(guess_dir)), adapter_name="guess")
@@ -80,14 +80,14 @@ def main(config: DictConfig) -> None:
     env = make("llm_20_questions", debug=True)
     game = env.run([agent_fn, agent_fn, agent_fn, agent_fn])
 
-    for _ in range(2):
+    for _ in range(10):
         env = make("llm_20_questions", debug=True)
         game = env.run([agent_fn, agent_fn, agent_fn, agent_fn])
         game_id = uuid.uuid4()
         with open(save_folder / f"{game_id}.json", "w", encoding="utf-8") as f:
             save_game = {"steps": game, "info": {"model": model_name}}
             json.dump(save_game, f)
-    artifact = wandb.Artifact(OUTPUT_DATASET_NAME, type=DATASET_TYPE)
+    artifact = wandb.Artifact(f"{OUTPUT_DATASET_NAME}-{model_name}", type=DATASET_TYPE)
     artifact.add_dir(save_folder.absolute())
     run.log_artifact(artifact)
     run.finish()

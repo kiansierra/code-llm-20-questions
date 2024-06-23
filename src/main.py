@@ -6,20 +6,22 @@ agent_path = Path("/kaggle_simulations/agent")
 
 if agent_path.exists():
     lib_path = agent_path / "libs"
-    sys.path.append(0, str(lib_path.absolute()))
+    sys.path.insert(0, str(lib_path.absolute()))
     
 else:
     agent_path = Path(__file__).parent
     lib_path = agent_path / "libs"
-    sys.path.append(str((agent_path / "libs").absolute()))
+    sys.path.insert(0, str((agent_path / "libs").absolute()))
 
 import torch
 from transformers import BitsAndBytesConfig, pipeline
-
 from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils.checkpoints import extract_last_checkpoint
+import peft
 
 print("Loaded Imports succesfully")
+print(f"{peft.__version__=}")
+
 
 quantization_config = BitsAndBytesConfig(
     **{

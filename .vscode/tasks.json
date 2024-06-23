@@ -53,14 +53,14 @@
     {
       "type": "docker-run",
       "label": "docker-run-submission-test",
-      "dependsOn": ["docker-build-test", "docker-run-submission"],
+      "dependsOn": ["docker-build-test"],
       "dockerRun": {
         "image": "submission-test",
         "command": "/bin/bash test_submission.sh",
         "volumes": [
           {
               "localPath": "${workspaceFolder}/subs",
-              "containerPath": "/kaggle_simulations/agent",
+              "containerPath": "/storage",
               "permissions": "ro"
           }
         ],
