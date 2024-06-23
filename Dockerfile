@@ -7,13 +7,12 @@ WORKDIR /build
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
-COPY requirements_build.txt .
-
-RUN pip install -r requirements_build.txt --target /libs
 
 RUN pip install -r requirements.txt 
 
-# RUN pip install flash-attn==2.5.1.post1 --no-build-isolation --target /libs
+COPY requirements_build.txt .
+
+RUN pip install -r requirements_build.txt --target /libs
 
 COPY . .
 

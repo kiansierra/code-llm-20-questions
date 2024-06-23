@@ -72,6 +72,28 @@
           "reveal": "always",
           "panel": "new"
         }
-  }
+  },
+  {
+    "type": "docker-run",
+    "label": "docker-run-submission-test-fast",
+    "dependsOn": ["docker-build-test"],
+    "dockerRun": {
+      "image": "submission-test",
+      "command": "python test_submission.py",
+      "volumes": [
+        {
+            "localPath": "${workspaceFolder}/subs",
+            "containerPath": "/kaggle_simulations/agent",
+            "permissions": "ro"
+        }
+      ],
+      "customOptions": "--gpus all"
+      
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+}
     ]
   }
