@@ -4,7 +4,7 @@ import hydra
 from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 import llm_20q.resolvers  # noqa: F401
 import wandb
@@ -31,7 +31,8 @@ def main(config: DictConfig) -> None:
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model_cfg = OmegaConf.to_container(config.model, resolve=True)
     model_cfg.pop("attn_implementation", None)
-    model = AutoModelForCausalLM.from_pretrained(**model_cfg)
+    bnb_config = BitsAndBytesConfig(**config.quantization)
+    model = AutoModelForCausalLM.from_pretrained(**model_cfg, quantization_config=bnb_config)
     tokenizer.save_pretrained(save_dir)
     model.save_pretrained(save_dir)
 

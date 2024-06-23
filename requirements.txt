@@ -23,5 +23,4 @@ weave
 vllm
 lightning
 huggingface_hub
-flash-attn
 rigging

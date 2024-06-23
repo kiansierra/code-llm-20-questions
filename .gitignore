@@ -9,6 +9,7 @@ wandb/*
 artifacts/*
 */artifacts/*
 /data/*
+subs/*
 # Ignore Used checkpoints
 *.pth
 *.bin
