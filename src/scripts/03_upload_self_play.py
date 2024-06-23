@@ -1,10 +1,11 @@
 from pathlib import Path
 
+import hydra
 from dotenv import load_dotenv
 from sklearn.model_selection import GroupKFold
-import hydra
+
 import wandb
-from llm_20q.data import build_df, build_game_records
+from llm_20q.data import build_game_records
 
 load_dotenv()
 

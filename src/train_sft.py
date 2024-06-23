@@ -7,12 +7,14 @@ from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, PreTrainedTokenizer
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, PreTrainedTokenizer)
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import wandb
 from llm_20q.data import TaskType
-from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
+from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
+                           prepare_guess_messages)
 
 load_dotenv()
 

@@ -13,11 +13,13 @@ else:
     lib_path = agent_path / "libs"
     sys.path.insert(0, str((agent_path / "libs").absolute()))
 
+import peft
 import torch
 from transformers import BitsAndBytesConfig, pipeline
-from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
+
+from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
+                           prepare_guess_messages)
 from llm_20q.utils.checkpoints import extract_last_checkpoint
-import peft
 
 print("Loaded Imports succesfully")
 print(f"{peft.__version__=}")
