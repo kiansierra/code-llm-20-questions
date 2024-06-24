@@ -1,0 +1,8 @@
+{
+    "files.watcherExclude": {
+        "**/subs/**": true,
+        "**/wandb/**": true,
+        "**/artifacts/**": true
+  }
+
+}

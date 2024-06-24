@@ -1,5 +1,8 @@
 # Ignore Python outputs
 .ipynb_checkpoints
+.mypy_cache
+.ruff_cache
+.vscode/*
 */.ipynb_checkpoints/*
 __pycache__/*
 *.pyc
@@ -8,7 +11,7 @@ wandb/*
 */wandb/*
 artifacts/*
 */artifacts/*
-/data/*
+data/*
 subs/*
 # Ignore Used checkpoints
 *.pth

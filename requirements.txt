@@ -1,4 +1,6 @@
 accelerate
+autoawq
+autoawq-kernels
 bitsandbytes
 datasets
 einops
@@ -22,3 +24,5 @@ wandb
 weave
 vllm
 lightning
+huggingface_hub
+rigging

@@ -7,4 +7,5 @@ pre-commit
 pylint
 pytest
 types-PyYAML
+typing_extensions
 ruff

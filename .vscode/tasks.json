@@ -1,0 +1,99 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "docker-build-submission",
+        "type": "shell",
+        "command": "docker build . -t submission",
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "docker-build-test",
+        "type": "shell",
+        "command": "docker build -f DockerfileTest . -t submission-test",
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "type": "docker-run",
+        "label": "docker-run-submission",
+        "dependsOn": ["docker-build-submission"],
+        "dockerRun": {
+          "image": "submission",
+          "envFiles": [".env"],
+          "command": "/bin/bash build.sh",
+          "volumes": [
+            {
+                "localPath": "${userHome}/.cache/huggingface",
+                "containerPath": "/root/.cache/huggingface",
+                "permissions": "ro"
+            },
+            {
+                "localPath": "${workspaceFolder}/subs",
+                "containerPath": "/build/subs",
+                "permissions": "rw"
+            }
+          ],
+           "customOptions": "--gpus all"
+          
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
+          }
+    },
+    {
+      "type": "docker-run",
+      "label": "docker-run-submission-test",
+      "dependsOn": ["docker-build-test"],
+      "dockerRun": {
+        "image": "submission-test",
+        "command": "/bin/bash test_submission.sh",
+        "volumes": [
+          {
+              "localPath": "${workspaceFolder}/subs",
+              "containerPath": "/storage",
+              "permissions": "ro"
+          }
+        ],
+        "customOptions": "--gpus all"
+        
+      },
+      "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+  },
+  {
+    "type": "docker-run",
+    "label": "docker-run-submission-test-fast",
+    "dependsOn": ["docker-build-test"],
+    "dockerRun": {
+      "image": "submission-test",
+      "command": "python test_submission.py",
+      "volumes": [
+        {
+            "localPath": "${workspaceFolder}/subs",
+            "containerPath": "/kaggle_simulations/agent",
+            "permissions": "ro"
+        }
+      ],
+      "customOptions": "--gpus all"
+      
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+}
+    ]
+  }

@@ -1,0 +1,19 @@
+FROM gcr.io/kaggle-gpu-images/python:latest as base
+
+RUN apt install pigz pv 
+
+WORKDIR /subs
+
+RUN pip install --upgrade pip
+
+RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia -y
+
+RUN pip install -U kaggle-environments
+
+RUN pip install pygame
+
+COPY src/scripts/test_submission.py .
+COPY test_submission.sh .
+
+RUN mkdir -p /storage
+RUN mkdir -p /kaggle_simulations/agent

@@ -1,6 +1,6 @@
 style:
 	isort src 
-	ruff --fix src 
+	ruff check --fix src 
 	black src 
 
 check:
