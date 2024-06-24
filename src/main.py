@@ -1,6 +1,11 @@
 # flake8: noqa: E402
 import sys
 from pathlib import Path
+import os
+import importlib
+import numpy as np
+os.environ["USE_TF"] = "false"
+os.environ["USE_FLAX"] = "false"
 
 agent_path = Path("/kaggle_simulations/agent")
 
@@ -12,11 +17,14 @@ else:
     agent_path = Path(__file__).parent
     lib_path = agent_path / "libs"
     sys.path.insert(0, str((agent_path / "libs").absolute()))
-
+    
+importlib.invalidate_caches()
 import peft
 import torch
-from transformers import BitsAndBytesConfig, pipeline
-
+import transformers
+transformers.utils.import_utils._bitsandbytes_available = True
+transformers.utils.import_utils._peft_available = True
+importlib.reload(transformers.modeling_utils)
 from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
                            prepare_guess_messages)
 from llm_20q.utils.checkpoints import extract_last_checkpoint
@@ -26,7 +34,7 @@ print(f"{peft.__version__=}")
 
 
 model_dir = (agent_path / "model").absolute()
-pipe = pipeline(
+pipe = transformers.pipeline(
     "conversational",
     model=model_dir,
     device_map="auto",
