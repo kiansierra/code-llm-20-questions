@@ -7,7 +7,7 @@ jinja2
 kaggle
 loguru
 omegaconf
-peft
 python-dotenv
 transformers
+peft==0.9.0
 wandb

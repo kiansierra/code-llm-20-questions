@@ -19,7 +19,7 @@ else:
     sys.path.insert(0, str((agent_path / "libs").absolute()))
     
 importlib.invalidate_caches()
-import peft
+
 import torch
 import transformers
 transformers.utils.import_utils._bitsandbytes_available = True
@@ -28,9 +28,9 @@ importlib.reload(transformers.modeling_utils)
 from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
                            prepare_guess_messages)
 from llm_20q.utils.checkpoints import extract_last_checkpoint
-
-print("Loaded Imports succesfully")
-print(f"{peft.__version__=}")
+import peft
+# print("Loaded Imports succesfully")
+# print(f"{peft.__version__=}")
 
 
 model_dir = (agent_path / "model").absolute()
@@ -61,7 +61,7 @@ def agent_fn(obs, cfg):
         response = output[-1]["content"]
     # if agent is the answerer
     elif obs.turnType == "answer":
-        pipe.model.disable_adapters()
+        # pipe.model.disable_adapters()
         yesno_words = ["yes", "no"]
         yes_no_ids = pipe.tokenizer.convert_tokens_to_ids(yesno_words)
         conversation = prepare_answer_messages(
