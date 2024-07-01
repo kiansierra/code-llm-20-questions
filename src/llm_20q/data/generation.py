@@ -13,7 +13,7 @@ def generate_questions(keyword:str, client:OpenAI, model_id:str="gpt-3.5-turbo",
             {"role": "system", "content": question_generator_prompt},
             {"role": "user", "content": keyword}]
         )
-    questions = completion.choices[0].message.content.split('\n')
+    questions = completion.choices[0].message.content
     return questions
 
 def generate_knowledge(keyword:str, client:OpenAI, model_id:str="gpt-3.5-turbo", knowledge_generation_prompt:str=KNOWLEDGE_GENERATOR_PROMPT):
@@ -23,5 +23,5 @@ def generate_knowledge(keyword:str, client:OpenAI, model_id:str="gpt-3.5-turbo",
             {"role": "system", "content": knowledge_generation_prompt},
             {"role": "user", "content": keyword}]
         )
-    questions = completion.choices[0].message.content.split('\n')
+    questions = completion.choices[0].message.content
     return questions
