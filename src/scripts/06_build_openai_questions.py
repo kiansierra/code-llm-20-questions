@@ -1,25 +1,35 @@
-from llm_20q.data import generate_questions, build_corpus, generate_questions
+from llm_20q.data import generate_questions, build_corpus, generate_questions, generate_questions_async
 import pandas as pd
 from pathlib import Path
 import wandb
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from dotenv import load_dotenv
 from tqdm import tqdm
+import asyncio
+from loguru import logger
+
 load_dotenv()
 
 DATASET_NAME = "openai-questions"
 DATASET_TYPE = "questions-dataset"
 
+async def generate_questions_async_data(keyword:str, client:AsyncOpenAI, answer:str):
+    response = await generate_questions_async(keyword, client, answer=answer)
+    return {'keyword': keyword, 'questions': response, 'answer': answer}
+
+async def generate_questions_async_data_all(keywords:list[str], client:AsyncOpenAI):
+    response_yes = await asyncio.gather(*[generate_questions_async_data(keyword, client, 'yes') for keyword in keywords])
+    logger.info('Finished generating yes questions')
+    response_no = await asyncio.gather(*[generate_questions_async_data(keyword, client, 'no') for keyword in keywords])
+    logger.info('Finished generating No questions')
+    return response_yes + response_no
+
 def main():
     corpus_df = build_corpus()
     keywords = corpus_df['keyword'].unique()
-    client = OpenAI()
-    responses = []
-    for keyword in tqdm(keywords):
-        response = generate_questions(keyword, client, answer='yes')
-        responses.append({'keyword': keyword, 'questions': response, 'answer': 'yes'})
-        response = generate_questions(keyword, client, answer='no')
-        responses.append({'keyword': keyword, 'questions': response, 'answer': 'no'})
+    client = AsyncOpenAI(timeout=60, max_retries=100)
+    with asyncio.Runner() as runner:
+        responses = runner.run(generate_questions_async_data_all(keywords, client))
     questions_df = pd.DataFrame(responses)
     questions_df['questions'] =  questions_df['questions'].str.split('\n')
     questions_df = questions_df.explode('questions')
