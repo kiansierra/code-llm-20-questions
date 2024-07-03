@@ -24,7 +24,7 @@ async def generate_questions_async_data(client:AsyncOpenAI, **kwargs) -> str:
 async def generate_questions_async_data_all(num_questions:list[str], client:AsyncOpenAI, **kwargs):
     questions = await asyncio.gather(*[generate_questions_async_data(client, **kwargs) for num in range(num_questions)])
     questions = list(itertools.chain(*questions))
-    logger.info('Finished generating yes questions')
+    logger.info('Finished generating questions')
     return questions
 
 @hydra.main(config_path="../llm_20q/configs/questions", config_name='openai-questions')

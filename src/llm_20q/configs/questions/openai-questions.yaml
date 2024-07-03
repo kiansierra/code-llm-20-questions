@@ -1,7 +1,7 @@
 generate_kwargs:
   model: gpt-3.5-turbo
   timeout: 60
-  temperature: 0.2
+  temperature: 1.3
   max_tokens: 60
   n : 6
 
