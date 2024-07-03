@@ -1,0 +1,16 @@
+generate_kwargs:
+  model: gpt-3.5-turbo
+  timeout: 60
+  temperature: 0.2
+  max_tokens: 60
+  n : 6
+
+wandb_init:
+  job_type: "generate-openai-questions"
+  tags: ["openai", "questions", "gpt-3.5-turbo"]
+
+version: "v1"
+num_questions: 15
+file_name: "openai-questions-${version}.parquet"
+dataset_type: "openai-questions"
+dataset_name: "openai-questions-${version}"

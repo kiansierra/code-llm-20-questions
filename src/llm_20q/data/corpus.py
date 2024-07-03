@@ -1,11 +1,13 @@
 import pandas as pd
 import string
+import itertools
 from .keywords_v1 import KEYWORDS_JSON_V1
 from .keywords_v2 import KEYWORDS_JSON_V2
 
 
 KEYWORDS = eval(KEYWORDS_JSON_V1) + eval(KEYWORDS_JSON_V2)
 CATEGORIES = list(set([elem['category'] for elem in KEYWORDS]))
+ALL_KEYWORDS = list(itertools.chain(*[itertools.chain(item['keyword'] for item in elem['words']) for elem in KEYWORDS]))
 CATEGORY_BASE_QUESTIONS = "Is the Keyword a {category}? {answer}"
 LETTER_BASE_QUESTIONS = "Does the Keyword start with {letter}? {answer}"
 
