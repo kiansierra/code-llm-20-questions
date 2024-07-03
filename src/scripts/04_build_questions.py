@@ -17,16 +17,17 @@ def main():
     category_questions_df['similarity'] = category_questions_df.apply(lambda x: (x['query_category'] in x['category']) * x['score'], axis=1)
     letter_questions_df = corpus_df.merge(letter_df, on='key').drop(columns='key')
     letter_questions_df['similarity'] = letter_questions_df.apply(lambda x: (x['query_letter'].lower() == x['letter'].lower()) * x['score'], axis=1)
-    keep_columns = ['question', 'similarity', 'keyword', 'category', 'alts']
+    keep_columns = ['question', 'similarity', 'keyword', 'answer']
     letter_df = letter_questions_df[keep_columns]
     category_df = category_questions_df[keep_columns]
     questions_df = pd.concat([letter_df, category_df], ignore_index=True)
     questions_dir = Path('../input/questions')
     questions_dir.mkdir(exist_ok=True, parents=True)
-    questions_df.to_parquet(questions_dir/'base.parquet')
+    file_path = questions_dir/'base.parquet'
+    questions_df.to_parquet(file_path)
     run = wandb.init(job_type="upload-questions")
     artifact = wandb.Artifact(DATASET_NAME, type=DATASET_TYPE)
-    artifact.add_dir(str(questions_dir))
+    artifact.add_file(str(file_path), name=file_path.name)
     run.log_artifact(artifact)
     run.finish()
     

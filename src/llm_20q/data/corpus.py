@@ -39,9 +39,9 @@ def build_category_questions() -> pd.DataFrame:
     """
 
     category_questions_positive = [{'query_category':category, 'question': CATEGORY_BASE_QUESTIONS.format(category=category, answer='yes'),
-                                    'score': 1} for category in CATEGORIES ]
+                                    'score': 1, 'answer':'yes'} for category in CATEGORIES ]
     category_questions_negative = [{'query_category':category, 'question': CATEGORY_BASE_QUESTIONS.format(category=category, answer='no'),
-                                    'score': -1} for category in CATEGORIES ]
+                                    'score': -1, 'answer':'no'} for category in CATEGORIES ]
     category_queries = pd.DataFrame(category_questions_positive + category_questions_negative)
     return category_queries
 
@@ -54,8 +54,8 @@ def build_letter_based_questions() -> pd.DataFrame:
     """
 
     letter_questions_positive = [{'query_letter':letter, 'question': LETTER_BASE_QUESTIONS.format(letter=letter, answer='yes'),
-                                'score': 1} for letter in string.ascii_lowercase ]
+                                'score': 1,  'answer':'yes'} for letter in string.ascii_lowercase ]
     letter_questions_negative = [{'query_letter':letter, 'question': LETTER_BASE_QUESTIONS.format(letter=letter, answer='no'),
-                                'score': -1} for letter in string.ascii_lowercase ]
+                                'score': -1,  'answer':'no'} for letter in string.ascii_lowercase ]
     letter_queries = pd.DataFrame(letter_questions_positive + letter_questions_negative)
     return letter_queries
