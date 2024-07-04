@@ -7,14 +7,12 @@ from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig, PreTrainedTokenizer)
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, PreTrainedTokenizer
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import wandb
 from llm_20q.data import TaskType
-from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
-                           prepare_guess_messages)
+from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 
 load_dotenv()
 
@@ -87,7 +85,7 @@ def main(config: DictConfig) -> None:
     tokenizer.pad_token = tokenizer.eos_token
     games_df["prompt"] = games_df.apply(generate_prompt(tokenizer, task), axis=1)
     # QLoRA config
-    quantize = config.get('quantization', None)
+    quantize = config.get("quantization", None)
     if quantize:
         bnb_config = BitsAndBytesConfig(**config.quantization)
 

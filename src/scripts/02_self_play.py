@@ -10,8 +10,7 @@ from omegaconf import DictConfig, OmegaConf
 from transformers import BitsAndBytesConfig, pipeline
 
 import wandb
-from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
-                           prepare_guess_messages)
+from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils import extract_last_checkpoint
 
 OUTPUT_DATASET_NAME = "self-play-records"
