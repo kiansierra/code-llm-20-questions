@@ -27,7 +27,7 @@ async def generate_questions_async_data_all(num_questions:list[str], client:Asyn
     logger.info('Finished generating questions')
     return questions
 
-@hydra.main(config_path="../llm_20q/configs/questions", config_name='openai-questions')
+@hydra.main(config_path="../llm_20q/configs/openai", config_name='openai-questions')
 def main(config):
     client = AsyncOpenAI(timeout=60, max_retries=100)
     with asyncio.Runner() as runner:
