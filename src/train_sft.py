@@ -74,8 +74,8 @@ def main(config: DictConfig) -> None:
     artifact_dir = f"./artifacts/replay-df-{task}"
     if state.is_main_process:
         raw_config = OmegaConf.to_container(config, resolve=True)
-        run = wandb.init(config=raw_config, tags=[task, model_name], job_type="train-sft")
-        artifact = run.use_artifact(f"{INPUT_DATASET_NAME}-{task}:latest", type=INPUT_DATASET_TYPE)
+        run = wandb.init(config=raw_config, **config.wandb_init)
+        artifact = run.use_artifact(**config.input_artifact)
         artifact_dir = artifact.download(artifact_dir)
     state.wait_for_everyone()
     games_df = pd.read_parquet(f"{artifact_dir}/{task}.parquet")
@@ -124,7 +124,7 @@ def main(config: DictConfig) -> None:
     )
     trainer.train()
     if state.is_main_process:
-        model_artifact = wandb.Artifact(f"sft-{task}-{model_name}", type=OUTPUT_DATASET_TYPE, metadata={"task": task})
+        model_artifact = wandb.Artifact(**raw_config['output_artifact'])
         model_artifact.add_dir(config.output_dir)
         run.log_artifact(model_artifact)
         run.finish()
