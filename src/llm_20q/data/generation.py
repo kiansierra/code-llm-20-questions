@@ -73,10 +73,27 @@ def generate_knowledge(
     client: OpenAI,
     model: str = "gpt-3.5-turbo",
     knowledge_generation_prompt: str = KNOWLEDGE_GENERATOR_PROMPT,
-):
+    **kwargs,
+) -> list[Choice]:
     completion = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}],
+        **kwargs
     )
-    questions = completion.choices[0].message.content
+    questions = completion.choices
+    return questions
+
+async def generate_knowledge_async(
+    keyword: str,
+    client: AsyncOpenAI,
+    model: str = "gpt-3.5-turbo",
+    knowledge_generation_prompt: str = KNOWLEDGE_GENERATOR_PROMPT,
+    **kwargs,
+) -> list[Choice]:
+    completion = await client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}],
+        **kwargs
+    )
+    questions = completion.choices
     return questions

@@ -1,0 +1,22 @@
+generate_kwargs:
+  model: gpt-3.5-turbo
+  timeout: 60
+  temperature: 0.8
+  n : 1
+
+wandb_init:
+  job_type: "generate-knowledge"
+  tags: ["openai", "answers", "${generate_kwargs.model}"]
+
+version: "v1"
+
+
+file_name: "openai-knowledge-${version}.parquet"
+
+output_artifact:
+  name: "openai-knowledge-${version}"
+  type: "openai-knowledge"
+  metadata: 
+    model_name: ${generate_kwargs.model}
+
+
