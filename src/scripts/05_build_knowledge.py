@@ -26,6 +26,9 @@ async def generate_questions_async_data_all(keywords: list[str], client: AsyncOp
     logger.info("Finished generating Knowledge")
     return knowledge
 
+def build_prompt(row):
+    return f"# Keyword: {row['keyword']} \n# Knowledge {row['knowledge']}"
+
 @hydra.main(config_path="../llm_20q/configs/knowledge", config_name="openai-knowledge", version_base=None)
 def main(config: DictConfig):
     raw_config = OmegaConf.to_container(config, resolve=True)
@@ -40,7 +43,7 @@ def main(config: DictConfig):
             generate_questions_async_data_all(keywords, client, **config.generate_kwargs)
         )
     knowledge_df = pd.DataFrame(responses)
-    knowledge_df['prompt'] = knowledge_df['knowledge']
+    knowledge_df['prompt'] = knowledge_df.apply(build_prompt, axis=1)
     knowledge_dir = Path("../input/knowledge")
     knowledge_dir.mkdir(exist_ok=True, parents=True)
     file_path = knowledge_dir / config.file_name

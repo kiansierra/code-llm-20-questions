@@ -1,0 +1,22 @@
+model_entity: sentence-transformers
+model_name: all-MiniLM-L6-v2
+model_name_or_path: ${model_entity}/${model_name}
+
+wandb_init:
+  job_type: "generate-RAG"
+  tags: ["RAG", "knowledge", "${model_name}"]
+
+output_artifact:
+  name: "rag-knowledge-${version}"
+  type: "rag-knowledge"
+  metadata: 
+    model_name: ${model_name}
+
+version: "v1"
+file_name: "openai-knowledge-${version}.parquet"
+input_artifact:
+  name: "openai-knowledge-${version}"
+  type: "openai-knowledge"
+
+
+

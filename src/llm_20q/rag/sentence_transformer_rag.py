@@ -16,6 +16,11 @@ class SentenceTransformerRag:
             self.embeddings = embeddings
         else:
             self.embeddings = self._build_embeddings(self.dataframe[embed_column].tolist())
+            
+    def to(self, device: str):
+        self.model.to(device)
+        self.embeddings = self.embeddings.to(device)
+        return self
 
 
     def _build_embeddings(self, sentences: list[str]) -> list[np.ndarray]:
@@ -28,7 +33,7 @@ class SentenceTransformerRag:
         torch.save(self.embeddings, f"{folder_path}/embeddings.pt")
         self.dataframe.to_parquet(f"{folder_path}/documents.parquet")
         logger.info("Saved embeddings and dataframe to folder")
-        self.model.save_pretrained(folder_path)
+        self.model.save_pretrained(str(folder_path))
 
     @classmethod
     def from_folder(cls, folder_path: str) -> "SentenceTransformerRag":
@@ -39,7 +44,8 @@ class SentenceTransformerRag:
         return cls(folder_path, dataframe, embeddings=embeddings)
     
     def search(self, query: str, top_k: int = 5) -> pd.DataFrame:
-        query_embedding = self.model.encode(query, convert_to_tensor=True, normalize_embeddings=True)
-        scores = torch.nn.functional.cosine_similarity(query_embedding, self.embeddings).numpy()
-        top_k_indices = np.argsort(scores)[::-1][:top_k]
+        query_embedding = self.model.encode(query, convert_to_tensor=True, normalize_embeddings=True, device=self.embeddings.device)
+        scores = torch.nn.functional.cosine_similarity(query_embedding, self.embeddings)
+        sorted_indices = torch.argsort(scores, descending=True)
+        top_k_indices = sorted_indices[:top_k].tolist()
         return self.dataframe.iloc[top_k_indices]
