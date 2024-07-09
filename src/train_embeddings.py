@@ -3,7 +3,8 @@ from datasets import Dataset
 from sentence_transformers import SentenceTransformer, SentenceTransformerTrainer, SentenceTransformerTrainingArguments
 from sentence_transformers.losses import CoSENTLoss
 from sentence_transformers.training_args import BatchSamplers
-
+import hydra
+from omegaconf import DictConfig, OmegaConf
 import wandb
 from llm_20q.data import build_corpus
 
@@ -15,67 +16,66 @@ OPENAI_DATASET_NAME = "openai-questions"
 def knowledge_template(keyword, category, knowledge, **kwargs):
     return f"# Keyword: {keyword}, # Categories: {', '.join(category)}, # Description: {knowledge}"
 
+def preprocess_answers(df:pd.DataFrame) -> pd.DataFrame:
+    df = df.query('answer != "drop"')
+    df['score'] = 1
+    opposite_df = df.copy()
+    opposite_df['answer'] = opposite_df['answer'].map({'yes':'no', 'no':'yes'})
+    opposite_df['score'] = -1
+    concat_df = pd.concat([df, opposite_df], ignore_index=True)
+    concat_df['query'] = concat_df['question'] + " " + concat_df['answer']
+    return concat_df
 
-def main():
-    run = wandb.init()
-    knowledge_ds = run.use_artifact(f"{KNOWLEDGE_DATASET_NAME}:latest")
-    knowledge_dir = knowledge_ds.download()
-    knowledge_df = pd.read_parquet(f"{knowledge_dir}/base.parquet")
-    corpus_df = build_corpus()
-    corpus_knowledge_df = corpus_df.merge(knowledge_df, on="keyword")
-    corpus_knowledge_df["prompt"] = corpus_knowledge_df.apply(lambda x: knowledge_template(**x), axis=1)
+def generate_multy_questions(df:pd.DataFrame, num_samples:int=10) -> pd.DataFrame:
+    questions_agg = []
+    for num in range(num_samples):
+        sample_df = df.groupby('keyword').sample(n=2 + num % 3,replace=False)
+        sample_df = sample_df.groupby('keyword').agg({'score':'mean', 'query': "\n".join, 'prompt':'first'})
+        questions_agg.append(sample_df)
+    
+    return pd.concat(questions_agg, ignore_index=True)
 
-    questions_ds = run.use_artifact(f"{BASE_QUESTIONS_DATASET_NAME}:latest")
-    questions_dir = questions_ds.download()
-    questions_df = pd.read_parquet(f"{questions_dir}/base.parquet")
+@hydra.main(config_path="llm_20q/configs/rag", config_name="xlm-roberta-base", version_base=None)
+def main(config: DictConfig) -> None:
+    raw_config = OmegaConf.to_container(config, resolve=True)
+    run = wandb.init(config=raw_config, **config.wandb_init)
+    artifact = run.use_artifact(**config.input_artifact_answers)
+    artifact_dir = artifact.download()
 
-    questions_openai_ds = run.use_artifact(f"{OPENAI_DATASET_NAME}:latest")
-    questions_openai_dir = questions_openai_ds.download()
-    questions_openai_df = pd.read_parquet(f"{questions_openai_dir}/openai.parquet")
-    all_questions_df = pd.concat([questions_openai_df, questions_df])[["keyword", "question", "similarity"]]
+    answers_df = pd.read_parquet(f"{artifact_dir}/{config.file_name_answers}")
+    answers_df = preprocess_answers(answers_df)
+    artifact = run.use_artifact(**config.input_artifact_knowledge)
+    artifact_dir = artifact.download()
+    knowledge_df = pd.read_parquet(f"{artifact_dir}/{config.file_name_knowledge}")
 
-    all_questions_df = all_questions_df.merge(corpus_knowledge_df, on="keyword")
-    all_questions_df.rename(columns={"similarity": "score"}, inplace=True)
-
-    dataset = Dataset.from_pandas(all_questions_df[["question", "prompt", "score"]])
+    single_question_df = answers_df.merge(knowledge_df, on="keyword")
+    multi_questions = generate_multy_questions(single_question_df)
+    selected_df = pd.concat([single_question_df[["query", "prompt", "score"]], multi_questions[["query", "prompt", "score"]]], ignore_index=True)
+    selected_df = selected_df.rename(columns={"query": "sentence1", "prompt": "sentence2"})
+    train_dataset = Dataset.from_pandas(selected_df)
+    train_dataset = train_dataset.shuffle(42)
+    eval_df = single_question_df[["query", "prompt", "score"]].rename(columns={"query": "sentence1", "prompt": "sentence2"})
+    eval_df = eval_df.sample(n=1_000, random_state=42).reset_index(drop=True)
+    eval_dataset = Dataset.from_pandas(eval_df)
 
     # Load a model to train/finetune
-    model = SentenceTransformer("xlm-roberta-base")
+    model = SentenceTransformer(config.model_name)
 
     # Initialize the CoSENTLoss
     # This loss requires pairs of text and a float similarity score as a label
     loss = CoSENTLoss(model)
 
-    args = SentenceTransformerTrainingArguments(
-        # Required parameter:
-        output_dir="models/mpnet-base-all-nli-triplet",
-        # Optional training parameters:
-        num_train_epochs=1,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
-        learning_rate=2e-5,
-        warmup_ratio=0.1,
-        fp16=True,  # Set to False if you get an error that your GPU can't run on FP16
-        bf16=False,  # Set to True if you have a GPU that supports BF16
-        batch_sampler=BatchSamplers.NO_DUPLICATES,  # losses that use "in-batch negatives" benefit from no duplicates
-        # Optional tracking/debugging parameters:
-        eval_strategy="steps",
-        eval_steps=100,
-        save_strategy="steps",
-        save_steps=50,
-        save_total_limit=2,
-        logging_steps=10,
-        run_name="mpnet-base-all-nli-triplet",  # Will be used in W&B if `wandb` is installed
-    )
+    args = SentenceTransformerTrainingArguments(**config.trainer) # Will be used in W&B if `wandb` is installed
 
     trainer = SentenceTransformerTrainer(
         model=model,
         args=args,
-        train_dataset=dataset,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         loss=loss,
     )
     trainer.train()
 
 
 if __name__ == "__main__":
-    main()
+    main() # pylint: disable=no-value-for-parameter
