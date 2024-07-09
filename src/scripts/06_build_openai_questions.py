@@ -1,6 +1,6 @@
 import asyncio
 import itertools
-import uuid
+from tqdm import tqdm
 from pathlib import Path
 
 import hydra
@@ -9,38 +9,59 @@ from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import OmegaConf
 from openai import AsyncOpenAI
+import logging
+
+
 
 import wandb
-from llm_20q.data import generate_questions_async
+from llm_20q.data import QUESTION_GENERATOR_PROMPT, USER_QUESTION_GENERATING_PROMPT, ALL_KEYWORDS
 
 load_dotenv()
 
-DATASET_NAME = "openai-questions"
-DATASET_TYPE = "questions-dataset"
+# Only show warnings
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.WARNING)
 
+def sanitize_question(keyword:str, question:str) -> str:
+    question = question.replace(keyword, "keyword")
+    question = question.replace(keyword.lower(), "keyword")
+    question = question.strip()
+    return question
 
-async def generate_questions_async_data(client: AsyncOpenAI, **kwargs) -> str:
-    choices = await generate_questions_async(client, **kwargs)
-    return [{"question": choice.message.content, "question_id": str(uuid.uuid4())} for choice in choices]
-
-
-async def generate_questions_async_data_all(num_questions: list[str], client: AsyncOpenAI, **kwargs):
-    questions = await asyncio.gather(
-        *[generate_questions_async_data(client, **kwargs) for num in range(num_questions)]
+async def generate_questions_async_data(keyword:str, client: AsyncOpenAI, **kwargs) -> str:
+    completion = await client.chat.completions.create(
+        messages=[
+            {"role": "system", "content": QUESTION_GENERATOR_PROMPT},
+            {"role": "user", "content": USER_QUESTION_GENERATING_PROMPT.format(keyword=keyword)},
+        ],
+        **kwargs,
     )
-    questions = list(itertools.chain(*questions))
+    choices = completion.choices
+    return [{"question": sanitize_question(keyword, choice.message.content), "keyword": keyword} for choice in choices]
+
+
+async def generate_questions_async_data_all(keywords: list[str], client: AsyncOpenAI, batch_size:int = 10, **kwargs):
+    all_questions = []
+    for i in tqdm(range(0, len(keywords), batch_size), desc="Generating Questions"):
+        questions = await asyncio.gather(
+            *[generate_questions_async_data(keyword, client, **kwargs) for keyword in keywords[i:i+batch_size]]
+        )
+        all_questions.extend(questions)
+    all_questions = list(itertools.chain(*all_questions))
     logger.info("Finished generating questions")
-    return questions
+    return all_questions
 
 
-@hydra.main(config_path="../llm_20q/configs/openai", config_name="openai-questions")
+@hydra.main(config_path="../llm_20q/configs/openai", config_name="openai-questions", version_base=None)
 def main(config):
     client = AsyncOpenAI(timeout=60, max_retries=100)
     with asyncio.Runner() as runner:
         responses = runner.run(
-            generate_questions_async_data_all(config.num_questions, client, **config.generate_kwargs)
+            generate_questions_async_data_all(ALL_KEYWORDS, client, **config.generate_kwargs)
         )
     questions_df = pd.DataFrame(responses)
+    questions_df['question'] = questions_df['question'].str.split('\n')
+    questions_df = questions_df.explode('question')
     questions_df.drop_duplicates(subset=["question"], inplace=True)
     questions_df.reset_index(drop=True, inplace=True)
     logger.info(f"Generated {len(questions_df)} Unique questions")
@@ -59,4 +80,4 @@ def main(config):
 
 
 if __name__ == "__main__":
-    main()
+    main() # pylint: disable=no-value-for-parameter
