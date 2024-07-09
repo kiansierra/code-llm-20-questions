@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 
 import wandb
-from llm_20q.data import build_category_questions, build_corpus, build_letter_based_questions
+from llm_20q.data import (build_category_questions, build_corpus,
+                          build_letter_based_questions)
 
 DATASET_NAME = "base-questions"
 DATASET_TYPE = "questions-dataset"

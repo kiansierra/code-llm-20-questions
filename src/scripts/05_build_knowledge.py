@@ -1,15 +1,16 @@
+import asyncio
+import itertools
 from pathlib import Path
+
 import hydra
 import pandas as pd
 from dotenv import load_dotenv
-from openai import OpenAI, AsyncOpenAI
-from tqdm import tqdm
-import itertools
-import wandb
-from llm_20q.data import build_corpus, generate_knowledge, generate_knowledge_async
-from omegaconf import OmegaConf, DictConfig
-import asyncio 
 from loguru import logger
+from omegaconf import DictConfig, OmegaConf
+from openai import AsyncOpenAI
+
+import wandb
+from llm_20q.data import build_corpus, generate_knowledge_async
 
 load_dotenv()
 

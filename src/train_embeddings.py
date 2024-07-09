@@ -1,12 +1,13 @@
+import hydra
 import pandas as pd
 from datasets import Dataset
-from sentence_transformers import SentenceTransformer, SentenceTransformerTrainer, SentenceTransformerTrainingArguments
-from sentence_transformers.losses import CoSENTLoss
-from sentence_transformers.training_args import BatchSamplers
-import hydra
 from omegaconf import DictConfig, OmegaConf
+from sentence_transformers import (SentenceTransformer,
+                                   SentenceTransformerTrainer,
+                                   SentenceTransformerTrainingArguments)
+from sentence_transformers.losses import CoSENTLoss
+
 import wandb
-from llm_20q.data import build_corpus
 
 KNOWLEDGE_DATASET_NAME = "base-knowledge"
 BASE_QUESTIONS_DATASET_NAME = "base-questions"
@@ -50,11 +51,15 @@ def main(config: DictConfig) -> None:
 
     single_question_df = answers_df.merge(knowledge_df, on="keyword")
     multi_questions = generate_multy_questions(single_question_df)
-    selected_df = pd.concat([single_question_df[["query", "prompt", "score"]], multi_questions[["query", "prompt", "score"]]], ignore_index=True)
+    selected_df = pd.concat([single_question_df[["query", "prompt", "score"]],
+                             multi_questions[["query", "prompt", "score"]]
+                             ],
+                            ignore_index=True)
     selected_df = selected_df.rename(columns={"query": "sentence1", "prompt": "sentence2"})
     train_dataset = Dataset.from_pandas(selected_df)
     train_dataset = train_dataset.shuffle(42)
-    eval_df = single_question_df[["query", "prompt", "score"]].rename(columns={"query": "sentence1", "prompt": "sentence2"})
+    eval_df = single_question_df[["query", "prompt", "score"]]
+    eval_df = eval_df.rename(columns={"query": "sentence1", "prompt": "sentence2"})
     eval_df = eval_df.sample(n=1_000, random_state=42).reset_index(drop=True)
     eval_dataset = Dataset.from_pandas(eval_df)
 

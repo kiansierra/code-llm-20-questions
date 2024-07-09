@@ -7,12 +7,14 @@ from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, PreTrainedTokenizer
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, PreTrainedTokenizer)
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import wandb
 from llm_20q.data import TaskType
-from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
+from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
+                           prepare_guess_messages)
 
 load_dotenv()
 
@@ -69,7 +71,6 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task: TaskType):
 def main(config: DictConfig) -> None:
     state = PartialState()
     model_id = config.model.pretrained_model_name_or_path
-    model_name = config.model_name
     task = config.task
     artifact_dir = f"./artifacts/replay-df-{task}"
     if state.is_main_process:

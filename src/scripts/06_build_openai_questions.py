@@ -1,6 +1,6 @@
 import asyncio
 import itertools
-from tqdm import tqdm
+import logging
 from pathlib import Path
 
 import hydra
@@ -9,12 +9,11 @@ from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import OmegaConf
 from openai import AsyncOpenAI
-import logging
-
-
+from tqdm import tqdm
 
 import wandb
-from llm_20q.data import QUESTION_GENERATOR_PROMPT, USER_QUESTION_GENERATING_PROMPT, ALL_KEYWORDS
+from llm_20q.data import (ALL_KEYWORDS, QUESTION_GENERATOR_PROMPT,
+                          USER_QUESTION_GENERATING_PROMPT)
 
 load_dotenv()
 

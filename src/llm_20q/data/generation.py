@@ -1,9 +1,10 @@
 # flake8: noqa: E501
 from typing import Optional
+
 from openai import AsyncOpenAI, OpenAI
 from openai.types.chat.chat_completion import Choice
 
-from .corpus import ALL_KEYWORDS, CATEGORIES
+from .corpus import CATEGORIES
 
 QUESTION_GENERATOR_PROMPT = f"""You are playing the 20 questions game, you're tasked with asking questions to identify the users keyword.
 The keyword will belong to one of the following categories: {', '.join(CATEGORIES)}.

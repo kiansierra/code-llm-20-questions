@@ -1,13 +1,11 @@
-import asyncio
-import itertools
-from pathlib import Path
 import os
+from pathlib import Path
+
 import hydra
 import pandas as pd
 from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import OmegaConf
-from openai import AsyncOpenAI
 
 import wandb
 from llm_20q import SentenceTransformerRag

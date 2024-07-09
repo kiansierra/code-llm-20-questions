@@ -27,7 +27,8 @@ transformers.utils.import_utils._bitsandbytes_available = True
 transformers.utils.import_utils._peft_available = True
 importlib.reload(transformers.modeling_utils)
 
-from llm_20q.model import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
+from llm_20q.model import (prepare_answer_messages, prepare_ask_messages,
+                           prepare_guess_messages)
 from llm_20q.utils.checkpoints import extract_last_checkpoint
 
 # print("Loaded Imports succesfully")

@@ -1,16 +1,18 @@
 import asyncio
 import itertools
+import logging
 from pathlib import Path
-from tqdm import tqdm
+
 import hydra
 import pandas as pd
 from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import OmegaConf
 from openai import AsyncOpenAI
-import logging
+from tqdm import tqdm
+
 import wandb
-from llm_20q.data import build_corpus,  ANSWER_GENERATOR_PROMPT
+from llm_20q.data import ANSWER_GENERATOR_PROMPT, build_corpus
 
 load_dotenv()
 
@@ -28,7 +30,11 @@ def sanitize_answer(answer:str) -> str:
     return 'drop'
 
 
-async def generate_answers_async_data(client: AsyncOpenAI, keyword: str, question: str, question_id:str, **kwargs) -> str:
+async def generate_answers_async_data(client: AsyncOpenAI,
+                                      keyword: str,
+                                      question: str,
+                                      question_id:str,
+                                      **kwargs) -> str:
     choices = completion = await client.chat.completions.create(
         messages=[
             {"role": "system", "content": ANSWER_GENERATOR_PROMPT.format(keyword=keyword)},
@@ -37,11 +43,16 @@ async def generate_answers_async_data(client: AsyncOpenAI, keyword: str, questio
         **kwargs,
     )
     choices = completion.choices
-    return [{"answer": sanitize_answer(choice.message.content), "raw_answer": choice.message.content, "keyword": keyword,
+    return [{"answer": sanitize_answer(choice.message.content),
+             "raw_answer": choice.message.content,
+             "keyword": keyword,
              "question": question, "question_id":question_id} for choice in choices]
 
 
-async def generate_answers_async_data_all(question_pairs: list[str], client: AsyncOpenAI, batch_size:int=20, **kwargs) -> pd.DataFrame:
+async def generate_answers_async_data_all(question_pairs: list[str],
+                                          client: AsyncOpenAI,
+                                          batch_size:int=20,
+                                          **kwargs) -> pd.DataFrame:
     all_answers = []
     for i in tqdm(range(0, len(question_pairs), batch_size), desc="Generating Answers"):
         answers = await asyncio.gather(
@@ -69,7 +80,9 @@ def main(config):
     questions_df["key"] = 0
     corpus_df["key"] = 0
     question_corpus_df = corpus_df.merge(questions_df, on="key", how="outer").drop("key", axis=1)
-    question_corpus_df = question_corpus_df.groupby("question_id").sample(n=config.num_samples, replace=False, random_state=config.random_state)
+    question_corpus_df = question_corpus_df.groupby("question_id").sample(n=config.num_samples,
+                                                                          replace=False,
+                                                                          random_state=config.random_state)
     keep_cols = ["keyword", "question", "question_id"]
     question_corpus_df = question_corpus_df[keep_cols]
     questions_df = questions_df.rename(columns={"question_keyword": "keyword"})[keep_cols]
