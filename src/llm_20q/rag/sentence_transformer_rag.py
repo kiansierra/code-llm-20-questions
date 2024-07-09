@@ -45,7 +45,7 @@ class SentenceTransformerRag:
     
     def search(self, query: str, top_k: int = 5) -> pd.DataFrame:
         query_embedding = self.model.encode(query, convert_to_tensor=True, normalize_embeddings=True, device=self.embeddings.device)
-        scores = torch.nn.functional.cosine_similarity(query_embedding, self.embeddings)
+        scores = torch.nn.functional.cosine_similarity(query_embedding, self.embeddings) # pylint: disable=not-callable
         sorted_indices = torch.argsort(scores, descending=True)
         top_k_indices = sorted_indices[:top_k].tolist()
         return self.dataframe.iloc[top_k_indices]
