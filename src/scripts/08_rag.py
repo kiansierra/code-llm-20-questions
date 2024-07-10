@@ -8,7 +8,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 import wandb
-from llm_20q import SentenceTransformerRag
+from llm_20q import SentenceTransformerRag, extract_last_checkpoint
 
 load_dotenv()
 
@@ -23,7 +23,9 @@ def main(config):
     knowledge_df = pd.read_parquet(artifact_file)
 
     knowledge_df.reset_index(drop=True, inplace=True)
-    rag = SentenceTransformerRag( dataframe=knowledge_df, model_name_or_path=config.model_name_or_path)
+    model_artifact = run.use_artifact(**config.input_model)
+    model_dir = Path(model_artifact.download())
+    rag = SentenceTransformerRag( dataframe=knowledge_df, model_name_or_path=extract_last_checkpoint(model_dir))
     logger.info(f"Generated {len(knowledge_df)=} Unique questions")
     rag_dir = Path(f"../input/rag/{config.model_name}")
     rag_dir.mkdir(exist_ok=True, parents=True)

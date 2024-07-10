@@ -6,6 +6,11 @@ wandb_init:
   job_type: "generate-RAG"
   tags: ["RAG", "knowledge", "${model_name}"]
 
+input_model:
+  artifact_or_name: "rag-${model_name}:latest"
+  type: model-rag
+
+
 output_artifact:
   name: "rag-knowledge-${version}"
   type: "rag-knowledge"

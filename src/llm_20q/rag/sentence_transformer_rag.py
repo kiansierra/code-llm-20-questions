@@ -1,5 +1,5 @@
 from typing import Optional
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
@@ -10,11 +10,11 @@ __all__ = ["SentenceTransformerRag"]
 
 class SentenceTransformerRag:
 
-    def __init__(self, model_name_or_path: str,
+    def __init__(self, model_name_or_path: str | Path,
                  dataframe: pd.DataFrame,
                  embed_column: str = "prompt",
                  embeddings:Optional[torch.Tensor] = None):
-        self.model = SentenceTransformer(model_name_or_path)
+        self.model = SentenceTransformer(str(model_name_or_path))
         self.dataframe = dataframe
         if embeddings is not None:
             self.embeddings = embeddings
