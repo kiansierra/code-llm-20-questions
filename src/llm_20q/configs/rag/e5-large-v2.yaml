@@ -1,5 +1,6 @@
-model_name: "xlm-roberta-base"
-model_name_or_path: ${model_name}
+model_entity: intfloat
+model_name: "e5-large-v2"
+model_name_or_path: ${model_entity}/${model_name}
 output_dir: ../checkpoints/rag/${model_name}
 
 wandb_init:
@@ -31,8 +32,8 @@ trainer:
     output_dir: ${output_dir}
     # Optional training parameters:
     num_train_epochs: 1
-    per_device_train_batch_size: 32
-    per_device_eval_batch_size: 32
+    per_device_train_batch_size: 16
+    per_device_eval_batch_size: 16
     learning_rate: 1e-4
     warmup_ratio: 0.1
     fp16: False  # Set to False if you get an error that your GPU can't run on FP16

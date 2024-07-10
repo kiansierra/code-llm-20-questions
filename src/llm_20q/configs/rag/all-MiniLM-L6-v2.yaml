@@ -1,5 +1,6 @@
-model_name: "xlm-roberta-base"
-model_name_or_path: ${model_name}
+model_entity: sentence-transformers
+model_name: all-MiniLM-L6-v2
+model_name_or_path: ${model_entity}/${model_name}
 output_dir: ../checkpoints/rag/${model_name}
 
 wandb_init:
