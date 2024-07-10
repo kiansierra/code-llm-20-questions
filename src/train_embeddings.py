@@ -7,7 +7,7 @@ from sentence_transformers import (SentenceTransformer,
                                    SentenceTransformerTrainer,
                                    SentenceTransformerTrainingArguments)
 from sentence_transformers.losses import CoSENTLoss
-
+from llm_20q import fix_prompt_rag
 import wandb
 
 KNOWLEDGE_DATASET_NAME = "base-knowledge"
@@ -39,17 +39,6 @@ def generate_multy_questions(df:pd.DataFrame, num_samples:int=15) -> pd.DataFram
     
     return pd.concat(questions_agg, ignore_index=True)
 
-def fix_prompt(model_name:str) -> Callable[[pd.DataFrame], pd.DataFrame]:
-    
-    def fix_nomic(df: pd.DataFrame) -> pd.DataFrame:
-        df['query'] = 'query: ' + df['query']
-        df['prompt'] = 'passage: ' + df['prompt']
-        return df
-    
-    if "nomic" in model_name:
-        return fix_nomic
-    
-    return lambda df: df
 
 @hydra.main(config_path="llm_20q/configs/rag", config_name="all-MiniLM-L6-v2", version_base=None)
 def main(config: DictConfig) -> None:
@@ -71,12 +60,12 @@ def main(config: DictConfig) -> None:
                              ],
                             ignore_index=True)
     
-    selected_df = fix_prompt(model_name=config.model_name_or_path)(selected_df)
+    selected_df = fix_prompt_rag(model_name=config.model_name_or_path)(selected_df)
     selected_df = selected_df.rename(columns={"query": "sentence1", "prompt": "sentence2"})
     train_dataset = Dataset.from_pandas(selected_df)
     train_dataset = train_dataset.shuffle(42)
     eval_df = single_question_df[["query", "prompt", "score"]]
-    eval_df = fix_prompt(model_name=config.model_name_or_path)(eval_df)
+    eval_df = fix_prompt_rag(model_name=config.model_name_or_path)(eval_df)
     eval_df = eval_df.rename(columns={"query": "sentence1", "prompt": "sentence2"})
     eval_df = eval_df.sample(n=1_000, random_state=42).reset_index(drop=True)
     eval_dataset = Dataset.from_pandas(eval_df)

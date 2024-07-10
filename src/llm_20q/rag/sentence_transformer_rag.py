@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -6,7 +6,21 @@ import torch
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-__all__ = ["SentenceTransformerRag"]
+__all__ = ["SentenceTransformerRag", "fix_prompt_rag"]
+
+def fix_prompt_rag(model_name:str) -> Callable[[pd.DataFrame], pd.DataFrame]:
+    
+    def fix_nomic(df: pd.DataFrame) -> pd.DataFrame:
+        # https://huggingface.co/nomic-ai/nomic-embed-text-v1#usage
+        df['query'] = 'search_query: ' + df['query']
+        df['prompt'] = 'search_document: ' + df['prompt']
+        return df
+    
+    if "nomic" in model_name:
+        return fix_nomic
+    
+    return lambda df: df
+    
 
 class SentenceTransformerRag:
 
