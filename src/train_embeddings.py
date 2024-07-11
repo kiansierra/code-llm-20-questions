@@ -1,4 +1,5 @@
 from typing import Callable
+
 import hydra
 import pandas as pd
 from datasets import Dataset
@@ -6,17 +7,12 @@ from omegaconf import DictConfig, OmegaConf
 from sentence_transformers import (SentenceTransformer,
                                    SentenceTransformerTrainer,
                                    SentenceTransformerTrainingArguments)
-
 from sentence_transformers.evaluation import InformationRetrievalEvaluator
-
 from sentence_transformers.losses import CoSENTLoss
-from llm_20q import fix_prompt_rag
-import wandb
 from sklearn.model_selection import StratifiedKFold
 
-KNOWLEDGE_DATASET_NAME = "base-knowledge"
-BASE_QUESTIONS_DATASET_NAME = "base-questions"
-OPENAI_DATASET_NAME = "openai-questions"
+import wandb
+from llm_20q import fix_prompt_rag
 
 
 def knowledge_template(keyword, category, knowledge, **kwargs):
@@ -50,7 +46,7 @@ def build_stratified_folds(df:pd.DataFrame, num_folds:int=5) -> pd.DataFrame:
     return df
 
 
-@hydra.main(config_path="llm_20q/configs/rag", config_name="all-MiniLM-L6-v2", version_base=None)
+@hydra.main(config_path="llm_20q/configs/rag", config_name="nomic-embed-text-v1", version_base=None)
 def main(config: DictConfig) -> None:
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, **config.wandb_init)

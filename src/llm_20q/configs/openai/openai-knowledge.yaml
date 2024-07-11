@@ -10,9 +10,12 @@ wandb_init:
 
 version: "v1"
 
+input_file_name: "openai-answers-${version}.parquet"
+input_artifact_answers:
+  artifact_or_name: "openai-answers-${version}:latest"
+  type: "openai-answers"
 
-file_name: "openai-knowledge-${version}.parquet"
-
+output_file_name: "openai-knowledge-${version}.parquet"
 output_artifact:
   name: "openai-knowledge-${version}"
   type: "openai-knowledge"
