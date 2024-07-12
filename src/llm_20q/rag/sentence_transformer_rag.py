@@ -27,8 +27,9 @@ class SentenceTransformerRag:
     def __init__(self, model_name_or_path: str | Path,
                  dataframe: pd.DataFrame,
                  embed_column: str = "prompt",
-                 embeddings:Optional[torch.Tensor] = None):
-        self.model = SentenceTransformer(str(model_name_or_path))
+                 embeddings:Optional[torch.Tensor] = None,
+                 **kwargs):
+        self.model = SentenceTransformer(str(model_name_or_path), **kwargs)
         self.dataframe = dataframe
         if embeddings is not None:
             self.embeddings = embeddings
@@ -69,4 +70,4 @@ class SentenceTransformerRag:
         scores = torch.nn.functional.cosine_similarity(query_embedding, self.embeddings) # pylint: disable=not-callable
         sorted_indices = torch.argsort(scores, descending=True)
         top_k_indices = sorted_indices[:top_k].tolist()
-        return self.dataframe.iloc[top_k_indices]
+        return self.dataframe.iloc[top_k_indices], scores[top_k_indices].tolist()

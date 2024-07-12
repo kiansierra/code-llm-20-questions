@@ -18,15 +18,17 @@ from llm_20q import fix_prompt_rag
 def knowledge_template(keyword, category, knowledge, **kwargs):
     return f"# Keyword: {keyword}, # Categories: {', '.join(category)}, # Description: {knowledge}"
 
-def preprocess_answers(df:pd.DataFrame) -> pd.DataFrame:
-    df = df.query('answer != "drop"')
-    df['score'] = 1
-    opposite_df = df.copy()
-    opposite_df['answer'] = opposite_df['answer'].map({'yes':'no', 'no':'yes'})
-    opposite_df['score'] = -1
-    concat_df = pd.concat([df, opposite_df], ignore_index=True)
-    concat_df['query'] = concat_df['question'] + " " + concat_df['answer']
-    return concat_df
+def preprocess_answers(knowledge_df:pd.DataFrame, answers_df:pd.DataFrame) -> pd.DataFrame:
+    knowledge_df = knowledge_df.drop(columns='question').explode('question_ids').reset_index()
+    knowledge_df = knowledge_df.rename(columns={'question_ids': 'question_id', 'index':'document_id'})
+    answers_df = answers_df.query('answer != "drop"').drop(columns='raw_answer')
+    qa_df = answers_df.merge(knowledge_df, on=['keyword', 'answer', 'question_id'])
+    qa_df['score'] = qa_df['answer'].map({'yes': 1, 'no': 0})
+    qa_df['query'] = qa_df['question']
+    qa_df['prompt'] = "# Keyword: " + qa_df['keyword'] + "\n" +"# Knowledge: " + qa_df['knowledge']
+    
+
+    return qa_df
 
 def generate_multy_questions(df:pd.DataFrame, num_samples:int=15) -> pd.DataFrame:
     questions_agg = []
@@ -50,20 +52,18 @@ def build_stratified_folds(df:pd.DataFrame, num_folds:int=5) -> pd.DataFrame:
 def main(config: DictConfig) -> None:
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, **config.wandb_init)
-    artifact = run.use_artifact(**config.input_artifact_answers)
-    artifact_dir = artifact.download()
+    answers_artifact = run.use_artifact(**config.input_artifact_answers)
+    answers_artifact_dir = answers_artifact.download()
+    answers_df = pd.read_parquet(f"{answers_artifact_dir}/{config.file_name_answers}")
+    knowledge_artifact = run.use_artifact(**config.input_artifact_knowledge)
+    knowledge_artifact_dir = knowledge_artifact.download()
+    knowledge_df = pd.read_parquet(f"{knowledge_artifact_dir}/{config.file_name_knowledge}")
+    single_question_df = preprocess_answers(knowledge_df, answers_df)
 
-    answers_df = pd.read_parquet(f"{artifact_dir}/{config.file_name_answers}")
-    answers_df = preprocess_answers(answers_df)
-    artifact = run.use_artifact(**config.input_artifact_knowledge)
-    artifact_dir = artifact.download()
-    knowledge_df = pd.read_parquet(f"{artifact_dir}/{config.file_name_knowledge}")
-    knowledge_df = knowledge_df.reset_index().rename(columns={"index": "document_id"})
-    single_question_df = answers_df.merge(knowledge_df, on="keyword")
     multi_questions = generate_multy_questions(single_question_df)
     single_question_df = build_stratified_folds(single_question_df)
     train_single_question_df = single_question_df.query('split == "train"').reset_index(drop=True)
-    validation_single_question_df = single_question_df.query('split == "validation"').reset_index(drop=True)
+    validation_single_question_df = single_question_df.query('split == "validation" and answer == "yes"').reset_index(drop=True)
     selected_df = pd.concat([train_single_question_df[["query", "prompt", "score"]],
                              multi_questions[["query", "prompt", "score"]]
                              ],
