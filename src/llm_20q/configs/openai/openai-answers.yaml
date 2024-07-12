@@ -1,5 +1,5 @@
 generate_kwargs:
-  model: gpt-3.5-turbo
+  model: gpt-4o
   timeout: 60
   temperature: 0.3
   max_tokens: 3
@@ -10,14 +10,19 @@ random_state: 42
 
 wandb_init:
   job_type: "generate-openai-answers"
-  tags: ["openai", "answers", "gpt-3.5-turbo"]
+  tags: ["openai", "answers", "${generate_kwargs.model}"]
 
-version: "v1"
-input_dataset_type: "openai-questions"
-input_dataset_name: "openai-questions-${version}"
+version: "v2"
+
 input_file_name: "openai-questions-${version}.parquet"
+input_artifact:
+  artifact_or_name: "openai-questions-${version}:latest"
+  type: "openai-synthetic"
 
-num_answers: 15
-file_name: "openai-answers-${version}.parquet"
-dataset_type: "openai-answers"
-dataset_name: "openai-answers-${version}"
+
+output_file_name: "openai-answers-${version}.parquet"
+output_artifact:
+  name: "openai-answers-${version}"
+  type: "openai-synthetic"
+  metadata: 
+    model_name: ${generate_kwargs.model}

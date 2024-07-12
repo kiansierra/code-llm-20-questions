@@ -51,7 +51,7 @@ async def generate_questions_async_data_all(keywords: list[str], client: AsyncOp
     return all_questions
 
 
-@hydra.main(config_path="../llm_20q/configs/openai", config_name="openai-questions", version_base=None)
+@hydra.main(config_path="../../llm_20q/configs/openai", config_name="openai-questions", version_base=None)
 def main(config):
     client = AsyncOpenAI(timeout=60, max_retries=100)
     with asyncio.Runner() as runner:
@@ -66,11 +66,11 @@ def main(config):
     logger.info(f"Generated {len(questions_df)} Unique questions")
     questions_dir = Path("../input/questions")
     questions_dir.mkdir(exist_ok=True, parents=True)
-    file_path = questions_dir / config.file_name
+    file_path = questions_dir / config.output_file_name
     questions_df.to_parquet(file_path)
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(**config.wandb_init, config=raw_config)
-    artifact = wandb.Artifact(config.dataset_name, type=config.dataset_type)
+    artifact = wandb.Artifact(**raw_config['output_artifact'])
     artifact.add_file(str(file_path), name=file_path.name)
     table = wandb.Table(dataframe=questions_df)
     run.log({"questions": table})

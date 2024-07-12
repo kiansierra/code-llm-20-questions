@@ -61,7 +61,7 @@ async def generate_knowledge_async_data_all(records: list[str],
 def build_prompt(row):
     return f"# Keyword: {row['keyword']} \n# Knowledge {row['knowledge']}"
 
-@hydra.main(config_path="../llm_20q/configs/openai", config_name="openai-knowledge", version_base=None)
+@hydra.main(config_path="../../llm_20q/configs/openai", config_name="openai-knowledge", version_base=None)
 def main(config: DictConfig):
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, **config.wandb_init)

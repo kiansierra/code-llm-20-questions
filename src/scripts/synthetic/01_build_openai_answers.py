@@ -64,12 +64,12 @@ async def generate_answers_async_data_all(question_pairs: list[str],
     return pd.DataFrame(all_answers)
 
 
-@hydra.main(config_path="../llm_20q/configs/openai", config_name="openai-answers", version_base=None)
+@hydra.main(config_path="../../llm_20q/configs/openai", config_name="openai-answers", version_base=None)
 def main(config):
     corpus_df = build_corpus()
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(**config.wandb_init, config=raw_config)
-    artifact = run.use_artifact(f"{config.input_dataset_name}:latest", type=config.input_dataset_type)
+    artifact = run.use_artifact(**config.input_artifact)
     artifact_dir = Path(artifact.download())
     artifact_file = artifact_dir / config.input_file_name
     questions_df = pd.read_parquet(artifact_file)
@@ -96,10 +96,10 @@ def main(config):
     logger.info(f"Generated {len(answers_df)=} Unique questions")
     answers_dir = Path("../input/answers")
     answers_dir.mkdir(exist_ok=True, parents=True)
-    file_path = answers_dir / config.file_name
+    file_path = answers_dir / config.output_file_name
     answers_df.to_parquet(file_path)
 
-    artifact = wandb.Artifact(config.dataset_name, type=config.dataset_type)
+    artifact = wandb.Artifact(**raw_config['output_artifact'])
     artifact.add_file(str(file_path), name=file_path.name)
     table = wandb.Table(dataframe=answers_df)
     run.log({"answers": table})
