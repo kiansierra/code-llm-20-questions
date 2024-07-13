@@ -99,10 +99,7 @@ def main(config: DictConfig) -> None:
     model = AutoModelForCausalLM.from_pretrained(**model_params)
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 
-    response_template = "<|start_header_id|>assistant<|end_header_id|>"
-    collate_fn = DataCollatorForCompletionOnlyLM(
-        tokenizer=tokenizer, pad_to_multiple_of=8, response_template=response_template
-    )
+    collate_fn = DataCollatorForCompletionOnlyLM(tokenizer=tokenizer, **config.collator_kwargs)
     train_df = games_df.query("split == 'train'").reset_index(drop=True)
     val_df = games_df.query("split == 'validation'").reset_index(drop=True)
 
