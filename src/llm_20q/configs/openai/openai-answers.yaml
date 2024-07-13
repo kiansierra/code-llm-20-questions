@@ -1,12 +1,20 @@
 generate_kwargs:
-  model: gpt-4o
+  model: gpt-3.5-turbo
   timeout: 60
-  temperature: 0.3
-  max_tokens: 3
+  temperature: 1.0
+  max_tokens: 4
   n : 1
 
 num_samples: 20
 random_state: 42
+
+similarity_filter:
+  model: 'all-MiniLM-L6-v2'
+  treshold: 0.85
+
+question_classifier:
+  model: 'facebook/bart-large-mnli'
+  treshold: 0.9
 
 wandb_init:
   job_type: "generate-openai-answers"

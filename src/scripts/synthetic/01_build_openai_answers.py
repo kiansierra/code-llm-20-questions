@@ -10,7 +10,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 from openai import AsyncOpenAI
 from tqdm import tqdm
-
+from llm_20q.processors.question_classifier import QuestionClassifier, SimilarityFilterer
 import wandb
 from llm_20q.data import ANSWER_GENERATOR_PROMPT, build_corpus
 
@@ -51,7 +51,7 @@ async def generate_answers_async_data(client: AsyncOpenAI,
 
 async def generate_answers_async_data_all(question_pairs: list[str],
                                           client: AsyncOpenAI,
-                                          batch_size:int=20,
+                                          batch_size:int=15,
                                           **kwargs) -> pd.DataFrame:
     all_answers = []
     for i in tqdm(range(0, len(question_pairs), batch_size), desc="Generating Answers"):
@@ -73,8 +73,18 @@ def main(config):
     artifact_dir = Path(artifact.download())
     artifact_file = artifact_dir / config.input_file_name
     questions_df = pd.read_parquet(artifact_file)
-    questions_df['valid_end'] = questions_df["question"].str.endswith("?")
-    questions_df = questions_df.query("valid_end")
+    questions_df = questions_df.query('question.str.len() >= 10').reset_index(drop=True)
+    questions_df = questions_df.query("question.str.endswith('?')").reset_index(drop=True)
+    # Fiter out questions that are of bad quality
+    with QuestionClassifier(**config.question_classifier) as qclassifier:
+        drop_idx = qclassifier.filter(questions_df['question'].tolist())
+    logger.info(f"Removed {len(drop_idx)=} questions for bad quality")
+    questions_df = questions_df.drop(drop_idx).reset_index(drop=True)
+    # Fiter out questions that are too similar
+    with SimilarityFilterer(**config.similarity_filter) as similarity_filterer:
+        drop_idx = similarity_filterer.filter(questions_df['question'].tolist())
+    logger.info(f"Removed {len(drop_idx)=} questions for similarity")
+    questions_df = questions_df.drop(drop_idx).reset_index(drop=True)
     questions_df = questions_df.reset_index()
     questions_df.rename(columns={"index": "question_id", "keyword": "question_keyword"}, inplace=True)
     questions_df["key"] = 0
