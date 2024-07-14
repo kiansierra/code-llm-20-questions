@@ -22,6 +22,8 @@ KNOWLEDGE_GENERATOR_PROMPT = """
 Generate knowledge about the keyword {keyword}, that is relevant to the questions.
 Do not provide the answer to the questions.
 Provide knowledge that is relevant to answer all the questions.
+Summarize the knowledge in a few sentences.
+Do not mention the keyword in the knowledge.
 """
 
 async def generate_knowledge_async_data(client: AsyncOpenAI,
