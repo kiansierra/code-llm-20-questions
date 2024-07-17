@@ -4,7 +4,7 @@ from .prompt_templates import prepare_answer_messages, prepare_ask_messages, pre
 
 __all__ = ["generate_prompt"]
 
-def generate_prompt(tokenizer: PreTrainedTokenizer, task: TaskType):
+def generate_prompt(tokenizer: PreTrainedTokenizer, task: TaskType, max_options: int = 10):
 
     def make_question_row(row):
         data = {
@@ -34,7 +34,8 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task: TaskType):
             "guess": row["guess"],
         }
         if 'options' in row:
-            data['options'] = row['options']
+            all_options = row['options'][:max_options] + [row['guess']]
+            data['options'] = all_options
         conversation = prepare_guess_messages(**data)
         prompt = tokenizer.apply_chat_template(conversation, tokenize=False)
         return prompt
