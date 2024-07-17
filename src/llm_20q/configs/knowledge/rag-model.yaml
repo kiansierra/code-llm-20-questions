@@ -17,7 +17,7 @@ output_artifact:
   metadata: 
     model_name: ${model_name}
 
-version: "v1"
+version: "v2"
 file_name: "openai-knowledge-${version}.parquet"
 input_artifact:
   name: "openai-knowledge-${version}"
