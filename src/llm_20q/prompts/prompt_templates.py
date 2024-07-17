@@ -35,7 +35,7 @@ Guess: 'nelson mandela'
 
 GUESS_PROMPT = """What is your guess? """
 
-GUESS_PROMPT_OPTIONS = """What is your guess? Here are a list of options to choose from {options}"""
+GUESS_PROMPT_OPTIONS = """What is your guess? Chose one of the following options: {options}"""
 
 __all__ = ["prepare_guess_messages", "prepare_answer_messages", "prepare_ask_messages"]
 

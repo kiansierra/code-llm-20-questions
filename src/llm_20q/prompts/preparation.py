@@ -1,5 +1,5 @@
 from transformers import PreTrainedTokenizer
-
+import random
 from ..types import TaskType
 from .prompt_templates import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 
@@ -36,7 +36,9 @@ def generate_prompt(tokenizer: PreTrainedTokenizer, task: TaskType, max_options:
             "guess": row["guess"],
         }
         if "options" in row:
-            all_options = row["options"][:max_options] + [row["guess"]]
+            all_options = list(row["options"][:max_options]) + [row["guess"]]
+            # We shuffle the options to avoid the model learning the order
+            random.shuffle(all_options)
             data["options"] = all_options
         conversation = prepare_guess_messages(**data)
         prompt = tokenizer.apply_chat_template(conversation, tokenize=False)
