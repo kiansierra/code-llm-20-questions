@@ -25,7 +25,7 @@ def main(config):
     knowledge_df.reset_index(drop=True, inplace=True)
     model_artifact = run.use_artifact(**config.input_model)
     model_dir = Path(model_artifact.download())
-    rag = SentenceTransformerRag( dataframe=knowledge_df, model_name_or_path=extract_last_checkpoint(model_dir))
+    rag = SentenceTransformerRag(dataframe=knowledge_df, model_name_or_path=extract_last_checkpoint(model_dir))
     logger.info(f"Generated {len(knowledge_df)=} Unique questions")
     rag_dir = Path(f"../input/rag/{config.model_name}")
     rag_dir.mkdir(exist_ok=True, parents=True)
@@ -33,11 +33,11 @@ def main(config):
     assert os.path.exists(rag_dir / "embeddings.pt"), "Embeddings not saved"
     assert os.path.exists(rag_dir / "documents.parquet"), "Documents not saved"
 
-    artifact = wandb.Artifact(**raw_config['output_artifact'])
+    artifact = wandb.Artifact(**raw_config["output_artifact"])
     artifact.add_dir(str(rag_dir))
     run.log_artifact(artifact)
     run.finish()
 
 
 if __name__ == "__main__":
-    main() # pylint: disable=no-value-for-parameter
+    main()  # pylint: disable=no-value-for-parameter

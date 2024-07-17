@@ -4,8 +4,7 @@ import hydra
 from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig)
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 import llm_20q.resolvers  # noqa: F401
 import wandb

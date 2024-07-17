@@ -20,14 +20,20 @@ ANSWER_GENERATOR_PROMPT = "You are playing the 20 questions game, you're tasked 
 USER_QUESTION_GENERATING_PROMPT = "Generate questions relevant to the keyword: {keyword}. The questions answers can be either yes or no.  Don't enumerate the questions, don't mention the keyword."
 
 
-def build_batch_questions(num_questions:Optional[int]=None, **kwargs) -> list[dict[str,str]]:
-    questions = [{"custom_id": f"request-{num}", "method": "POST", "url": "/v1/chat/completions", "body":{"messages":[
-        {"role": "system", "content": QUESTION_GENERATOR_PROMPT},
-        {"role": "user", "content": "Ask me a question."}
-    ], **kwargs}
-    } for num in range(num_questions)]
+def build_batch_questions(num_questions: Optional[int] = None, **kwargs) -> list[dict[str, str]]:
+    questions = [
+        {
+            "custom_id": f"request-{num}",
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "messages": [{"role": "system", "content": QUESTION_GENERATOR_PROMPT}, {"role": "user", "content": "Ask me a question."}],
+                **kwargs,
+            },
+        }
+        for num in range(num_questions)
+    ]
     return questions
-    
 
 
 def generate_questions(
@@ -91,12 +97,11 @@ def generate_knowledge(
     **kwargs,
 ) -> list[Choice]:
     completion = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}],
-        **kwargs
+        model=model, messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}], **kwargs
     )
     questions = completion.choices
     return questions
+
 
 async def generate_knowledge_async(
     keyword: str,
@@ -106,9 +111,7 @@ async def generate_knowledge_async(
     **kwargs,
 ) -> list[Choice]:
     completion = await client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}],
-        **kwargs
+        model=model, messages=[{"role": "system", "content": knowledge_generation_prompt}, {"role": "user", "content": keyword}], **kwargs
     )
     questions = completion.choices
     return questions

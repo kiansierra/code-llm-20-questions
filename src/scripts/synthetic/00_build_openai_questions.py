@@ -12,8 +12,7 @@ from openai import AsyncOpenAI
 from tqdm import tqdm
 
 import wandb
-from llm_20q.data import (ALL_KEYWORDS, QUESTION_GENERATOR_PROMPT,
-                          USER_QUESTION_GENERATING_PROMPT)
+from llm_20q.data import ALL_KEYWORDS, QUESTION_GENERATOR_PROMPT, USER_QUESTION_GENERATING_PROMPT
 
 load_dotenv()
 
@@ -21,13 +20,15 @@ load_dotenv()
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 
-def sanitize_question(keyword:str, question:str) -> str:
+
+def sanitize_question(keyword: str, question: str) -> str:
     question = question.replace(keyword, "keyword")
     question = question.replace(keyword.lower(), "keyword")
     question = question.strip()
     return question
 
-async def generate_questions_async_data(keyword:str, client: AsyncOpenAI, **kwargs) -> str:
+
+async def generate_questions_async_data(keyword: str, client: AsyncOpenAI, **kwargs) -> str:
     completion = await client.chat.completions.create(
         messages=[
             {"role": "system", "content": QUESTION_GENERATOR_PROMPT},
@@ -39,11 +40,11 @@ async def generate_questions_async_data(keyword:str, client: AsyncOpenAI, **kwar
     return [{"question": sanitize_question(keyword, choice.message.content), "keyword": keyword} for choice in choices]
 
 
-async def generate_questions_async_data_all(keywords: list[str], client: AsyncOpenAI, batch_size:int = 10, **kwargs):
+async def generate_questions_async_data_all(keywords: list[str], client: AsyncOpenAI, batch_size: int = 10, **kwargs):
     all_questions = []
     for i in tqdm(range(0, len(keywords), batch_size), desc="Generating Questions"):
         questions = await asyncio.gather(
-            *[generate_questions_async_data(keyword, client, **kwargs) for keyword in keywords[i:i+batch_size]]
+            *[generate_questions_async_data(keyword, client, **kwargs) for keyword in keywords[i : i + batch_size]]
         )
         all_questions.extend(questions)
     all_questions = list(itertools.chain(*all_questions))
@@ -55,12 +56,10 @@ async def generate_questions_async_data_all(keywords: list[str], client: AsyncOp
 def main(config):
     client = AsyncOpenAI(timeout=60, max_retries=100)
     with asyncio.Runner() as runner:
-        responses = runner.run(
-            generate_questions_async_data_all(ALL_KEYWORDS, client, **config.generate_kwargs)
-        )
+        responses = runner.run(generate_questions_async_data_all(ALL_KEYWORDS, client, **config.generate_kwargs))
     questions_df = pd.DataFrame(responses)
-    questions_df['question'] = questions_df['question'].str.split('\n')
-    questions_df = questions_df.explode('question')
+    questions_df["question"] = questions_df["question"].str.split("\n")
+    questions_df = questions_df.explode("question")
     questions_df.drop_duplicates(subset=["question"], inplace=True)
     questions_df.reset_index(drop=True, inplace=True)
     logger.info(f"Generated {len(questions_df)} Unique questions")
@@ -70,7 +69,7 @@ def main(config):
     questions_df.to_parquet(file_path)
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(**config.wandb_init, config=raw_config)
-    artifact = wandb.Artifact(**raw_config['output_artifact'])
+    artifact = wandb.Artifact(**raw_config["output_artifact"])
     artifact.add_file(str(file_path), name=file_path.name)
     table = wandb.Table(dataframe=questions_df)
     run.log({"questions": table})
@@ -79,4 +78,4 @@ def main(config):
 
 
 if __name__ == "__main__":
-    main() # pylint: disable=no-value-for-parameter
+    main()  # pylint: disable=no-value-for-parameter

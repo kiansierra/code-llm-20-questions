@@ -1,7 +1,8 @@
 import itertools
-from typing import Literal, Optional
+from typing import Optional
 
 from transformers import Conversation
+
 from ..types import AnswerType
 
 ANSWER_SYSTEM_PROMPT = """You are playing the 20 questions game, you are in charge of responding to the user's questions.
@@ -38,11 +39,12 @@ GUESS_PROMPT_OPTIONS = """What is your guess? Here are a list of options to choo
 
 __all__ = ["prepare_guess_messages", "prepare_answer_messages", "prepare_ask_messages"]
 
+
 def prepare_guess_messages(
     questions: list[str],
     answers: list[AnswerType],
     guess: Optional[str] = None,
-    options: Optional[list[str]]= None,
+    options: Optional[list[str]] = None,
     guess_system_prompt: str = GUESS_SYSTEM_PROMPT,
     guess_prompt: str = GUESS_PROMPT,
     guess_prompt_options: str = GUESS_PROMPT_OPTIONS,
@@ -69,8 +71,8 @@ def prepare_guess_messages(
     for question, answer in zip(questions, answers):
         messages.append({"role": "user", "content": question})
         messages.append({"role": "assistant", "content": answer})
-        
-    guess_prompt_message = guess_prompt if options is None else guess_prompt_options.format(options=', '.join(options))
+
+    guess_prompt_message = guess_prompt if options is None else guess_prompt_options.format(options=", ".join(options))
     messages.append({"role": "user", "content": guess_prompt_message})
     if guess:
         messages.append({"role": "assistant", "content": guess})

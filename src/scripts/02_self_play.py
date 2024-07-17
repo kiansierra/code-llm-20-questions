@@ -4,15 +4,13 @@ from pathlib import Path
 
 import hydra
 import torch
-import wandb
 from kaggle_environments import make
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 from transformers import BitsAndBytesConfig, pipeline
 
-from llm_20q.prompts.prompt_templates import (prepare_answer_messages,
-                                              prepare_ask_messages,
-                                              prepare_guess_messages)
+import wandb
+from llm_20q.prompts.prompt_templates import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils import extract_last_checkpoint
 
 OUTPUT_DATASET_NAME = "self-play-records"
@@ -67,9 +65,7 @@ def main(config: DictConfig) -> None:
             conversation = prepare_answer_messages(
                 keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers
             )
-            input_ids = pipe.tokenizer.apply_chat_template(
-                conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt"
-            )
+            input_ids = pipe.tokenizer.apply_chat_template(conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt")
             with torch.no_grad():
                 logits = pipe.model(input_ids).logits
             position = logits[0, -1, yes_no_ids].argmax()

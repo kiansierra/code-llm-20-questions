@@ -7,15 +7,13 @@ from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 from peft import LoraConfig, prepare_model_for_kbit_training
-from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          BitsAndBytesConfig, PreTrainedTokenizer)
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from trl import DataCollatorForCompletionOnlyLM, SFTConfig, SFTTrainer
 
 import wandb
 from llm_20q import generate_prompt
 
 load_dotenv()
-
 
 
 @hydra.main(config_path="llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
@@ -54,9 +52,7 @@ def main(config: DictConfig) -> None:
     train_df = games_df.query("split == 'train'").reset_index(drop=True)
     val_df = games_df.query("split == 'validation'").reset_index(drop=True)
 
-    datasets = DatasetDict(
-        {"train": Dataset.from_pandas(train_df[["prompt"]]), "validation": Dataset.from_pandas(val_df[["prompt"]])}
-    )
+    datasets = DatasetDict({"train": Dataset.from_pandas(train_df[["prompt"]]), "validation": Dataset.from_pandas(val_df[["prompt"]])})
     datasets = datasets.map(lambda x: tokenizer(x["prompt"]))
     datasets = datasets.map(lambda x: {"input_length": len(x["input_ids"])})
     max_seq_length = max(datasets["train"]["input_length"] + datasets["validation"]["input_length"])
@@ -73,7 +69,7 @@ def main(config: DictConfig) -> None:
     )
     trainer.train()
     if state.is_main_process:
-        model_artifact = wandb.Artifact(**raw_config['output_artifact'])
+        model_artifact = wandb.Artifact(**raw_config["output_artifact"])
         model_artifact.add_dir(config.output_dir)
         run.log_artifact(model_artifact)
         run.finish()

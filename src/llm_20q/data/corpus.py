@@ -8,9 +8,7 @@ from .keywords_v2 import KEYWORDS_JSON_V2
 
 KEYWORDS = eval(KEYWORDS_JSON_V1) + eval(KEYWORDS_JSON_V2)
 CATEGORIES = list({elem["category"] for elem in KEYWORDS})
-ALL_KEYWORDS = list(set(
-    itertools.chain(*[itertools.chain(item["keyword"] for item in elem["words"]) for elem in KEYWORDS])
-))
+ALL_KEYWORDS = list(set(itertools.chain(*[itertools.chain(item["keyword"] for item in elem["words"]) for elem in KEYWORDS])))
 CATEGORY_BASE_QUESTIONS = "Is the Keyword a {category}? {answer}"
 LETTER_BASE_QUESTIONS = "Does the Keyword start with {letter}? {answer}"
 
@@ -30,9 +28,7 @@ def build_corpus() -> pd.DataFrame:
     corpus_df = pd.concat(dfs)
     corpus_df = corpus_df.explode("alts")
     corpus_df["alts"] = corpus_df["alts"].fillna("")
-    corpus_df = corpus_df.groupby("keyword", as_index=False).agg(
-        {"category": lambda x: x.unique(), "alts": lambda x: x.unique()}
-    )
+    corpus_df = corpus_df.groupby("keyword", as_index=False).agg({"category": lambda x: x.unique(), "alts": lambda x: x.unique()})
     corpus_df = corpus_df.explode("alts")
     corpus_df["letter"] = corpus_df["keyword"].apply(lambda x: x[0])
     return corpus_df

@@ -27,7 +27,7 @@ transformers.utils.import_utils._bitsandbytes_available = True
 transformers.utils.import_utils._peft_available = True
 importlib.reload(transformers.modeling_utils)
 
-from llm_20q import (prepare_answer_messages, prepare_ask_messages, prepare_guess_messages)
+from llm_20q import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils.checkpoints import extract_last_checkpoint
 
 # print("Loaded Imports succesfully")
@@ -68,9 +68,7 @@ def agent_fn(obs, cfg):
         conversation = prepare_answer_messages(
             keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers
         )
-        input_ids = pipe.tokenizer.apply_chat_template(
-            conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt"
-        )
+        input_ids = pipe.tokenizer.apply_chat_template(conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt")
         with torch.no_grad():
             logits = pipe.model(input_ids).logits
         position = logits[0, -1, yes_no_ids].argmax()
