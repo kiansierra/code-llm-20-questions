@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -12,8 +12,10 @@ def fix_prompt_rag(model_name:str) -> Callable[[pd.DataFrame], pd.DataFrame]:
     
     def fix_nomic(df: pd.DataFrame) -> pd.DataFrame:
         # https://huggingface.co/nomic-ai/nomic-embed-text-v1#usage
-        df['query'] = 'search_query: ' + df['query']
-        df['prompt'] = 'search_document: ' + df['prompt']
+        if 'query' in df.columns:
+            df['query'] = 'search_query: ' + df['query']
+        if 'prompt' in df.columns:
+            df['prompt'] = 'search_document: ' + df['prompt']
         return df
     
     if "nomic" in model_name:
@@ -29,12 +31,15 @@ class SentenceTransformerRag:
                  embed_column: str = "prompt",
                  embeddings:Optional[torch.Tensor] = None,
                  **kwargs):
-        self.model = SentenceTransformer(str(model_name_or_path), **kwargs)
+        self.model = SentenceTransformer(str(model_name_or_path), trust_remote_code=True, **kwargs)
         self.dataframe = dataframe
         if embeddings is not None:
             self.embeddings = embeddings
         else:
             self.embeddings = self._build_embeddings(self.dataframe[embed_column].tolist())
+            
+        self.filter_embedding = self.embeddings
+        self.filter_df = self.dataframe
             
     def to(self, device: str):
         self.model.to(device)
@@ -71,3 +76,36 @@ class SentenceTransformerRag:
         sorted_indices = torch.argsort(scores, descending=True)
         top_k_indices = sorted_indices[:top_k].tolist()
         return self.dataframe.iloc[top_k_indices], scores[top_k_indices].tolist()
+    
+    
+    def filter(self, query: str,
+               top_k: Optional[int] = None,
+               top_p: Optional[float] = None,
+               direction: Literal['top', 'bottom']='top') -> pd.DataFrame:
+        if top_k is None and top_p is None:
+            raise ValueError("Either top_k or top_p must be provided")
+        if direction not in ['top', 'bottom']:
+            raise ValueError("direction must be either 'top' or 'bottom'")
+        if top_k is not None and top_p is not None:
+            logger.warning("Both top_k and top_p are provided, using minimum of both")
+            top_k_p = int(self.filter_embedding.size(0) * top_p)
+            top_k = min(top_k, top_k_p)
+        if top_k is None:
+            top_k = int(self.filter_embedding.size(0) * top_p)
+        query_embedding = self.model.encode(query,
+                                            convert_to_tensor=True,
+                                            normalize_embeddings=True,
+                                            device=self.filter_embedding.device)
+        scores = torch.nn.functional.cosine_similarity(query_embedding, self.filter_embedding) # pylint: disable=not-callable
+        sorted_indices = torch.argsort(scores, descending=True)
+        if direction == 'bottom':
+            sorted_indices = sorted_indices.flip(0)
+        selected_indices = sorted_indices[:top_k].tolist()
+        self.filter_embedding = self.filter_embedding[selected_indices]
+        self.filter_df = self.filter_df.iloc[selected_indices].reset_index(drop=True)
+        return self.filter_df
+    
+    def reset(self):
+        self.filter_embedding = self.embeddings
+        self.filter_df = self.dataframe
+
