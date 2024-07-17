@@ -2,8 +2,7 @@ import itertools
 from typing import Literal, Optional
 
 from transformers import Conversation
-
-AnswerType = Literal["yes", "no"]
+from ..types import AnswerType
 
 ANSWER_SYSTEM_PROMPT = """You are playing the 20 questions game, you are in charge of responding to the user's questions.
 The user will try to guess the object you're thinking of by asking yes/no questions.
@@ -35,13 +34,18 @@ Guess: 'nelson mandela'
 
 GUESS_PROMPT = """What is your guess? """
 
+GUESS_PROMPT_OPTIONS = """What is your guess? Here are a list of options to choose from {options}"""
+
+__all__ = ["prepare_guess_messages", "prepare_answer_messages", "prepare_ask_messages"]
 
 def prepare_guess_messages(
     questions: list[str],
     answers: list[AnswerType],
-    guesses: list[str],
+    guess: Optional[str] = None,
+    options: Optional[list[str]]= None,
     guess_system_prompt: str = GUESS_SYSTEM_PROMPT,
     guess_prompt: str = GUESS_PROMPT,
+    guess_prompt_options: str = GUESS_PROMPT_OPTIONS,
     uuid: Optional[str] = None,
 ):
     """
@@ -61,15 +65,15 @@ def prepare_guess_messages(
     """
 
     messages = [{"role": "system", "content": guess_system_prompt}]
-    for question, answer, guess in itertools.zip_longest(questions, answers, guesses):
+    assert len(questions) == len(answers), "Questions and answers must have the same length"
+    for question, answer in zip(questions, answers):
         messages.append({"role": "user", "content": question})
-        if answer:
-            messages.append({"role": "assistant", "content": answer})
-        else:
-            messages.append({"role": "assistant", "content": ""})
-        if guess:
-            messages.append({"role": "user", "content": guess_prompt})
-            messages.append({"role": "assistant", "content": guess})
+        messages.append({"role": "assistant", "content": answer})
+        
+    guess_prompt_message = guess_prompt if options is None else guess_prompt_options.format(options=', '.join(options))
+    messages.append({"role": "user", "content": guess_prompt_message})
+    if guess:
+        messages.append({"role": "assistant", "content": guess})
     return Conversation(messages=messages, conversation_id=uuid)
 
 
