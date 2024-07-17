@@ -23,7 +23,7 @@ def preprocess_answers(knowledge_df:pd.DataFrame, answers_df:pd.DataFrame) -> pd
     knowledge_df = knowledge_df.rename(columns={'question_ids': 'question_id', 'index':'document_id'})
     answers_df = answers_df.query('answer != "drop"').drop(columns='raw_answer')
     qa_df = answers_df.merge(knowledge_df, on=['keyword', 'answer', 'question_id'])
-    qa_df['score'] = qa_df['answer'].map({'yes': 1, 'no': 0})
+    qa_df['score'] = qa_df['answer'].map({'yes': 1, 'no': -1})
     qa_df['query'] = qa_df['question']
     qa_df['prompt'] = "# Keyword: " + qa_df['keyword'] + "\n" +"# Knowledge: " + qa_df['knowledge']
     
