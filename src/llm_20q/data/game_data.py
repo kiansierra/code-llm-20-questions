@@ -29,7 +29,8 @@ def build_game_records(folder: str, reward: bool = True) -> list[dict]:
             game = json.load(f)
         end_step = game["steps"][-1]
         for elem in end_step:
-            if "keyword" in elem["observation"] and ((elem["reward"] and elem["reward"] > 0) or not reward):
+            reward_condition = (elem["reward"] and elem["reward"] > 0) or not reward
+            if "keyword" in elem["observation"] and reward_condition and elem['action']:
                 data = {**elem["observation"]}
                 data["reward"] = elem["reward"]
                 data = {**data, **game["info"]}
