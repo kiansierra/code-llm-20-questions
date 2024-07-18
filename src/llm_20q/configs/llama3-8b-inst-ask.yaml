@@ -1,6 +1,6 @@
 model_org: meta-llama
 model_name: Meta-Llama-3-8B-Instruct
-task: guess
+task: ask
 output_dir: ../checkpoints/${model_name}/${task}
 
 collator_kwargs:
