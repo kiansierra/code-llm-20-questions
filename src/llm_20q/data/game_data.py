@@ -52,7 +52,7 @@ def build_question_df(games: list[dict]) -> pd.DataFrame:
     games_df = pd.DataFrame(games)
     games_df["position"] = games_df.apply(lambda x: list(range(len(x["questions"]))), axis=1)
     games_df = games_df.explode("position").reset_index(drop=True)
-    games_df["question"] = games_df.apply(lambda x: x["questions"][x["position"]], axis=1)
+    games_df["question"] = games_df.apply(lambda x: x["questions"][x["position"]], axis=1).str.strip()
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"]], axis=1)
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"]], axis=1)
@@ -68,7 +68,7 @@ def build_answers_df(games: list[dict]) -> pd.DataFrame:
     games_df = games_df.query("position < max_position-1").reset_index(drop=True)
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"] + 1], axis=1)
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
-    games_df["answer"] = games_df.apply(lambda x: x["answers"][x["position"]], axis=1)
+    games_df["answer"] = games_df.apply(lambda x: x["answers"][x["position"]], axis=1).str.strip()
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"]], axis=1)
     return games_df
 
@@ -82,7 +82,7 @@ def build_guesses_df(games: list[dict]) -> pd.DataFrame:
     games_df = games_df.query("position < max_position-1").reset_index(drop=True)
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"] + 1], axis=1)
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"] + 1], axis=1)
-    games_df["guess"] = games_df.apply(lambda x: x["guesses"][x["position"]], axis=1)
+    games_df["guess"] = games_df.apply(lambda x: x["guesses"][x["position"]], axis=1).str.strip()
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     return games_df
 
