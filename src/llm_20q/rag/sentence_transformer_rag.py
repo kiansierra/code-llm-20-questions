@@ -83,20 +83,29 @@ class SentenceTransformerRag:
             raise ValueError("Either top_k or top_p must be provided")
         if direction not in ["top", "bottom"]:
             raise ValueError("direction must be either 'top' or 'bottom'")
+        if top_k is not None:
+            top_k_use = top_k
         if top_k is not None and top_p is not None:
             logger.warning("Both top_k and top_p are provided, using minimum of both")
             top_k_p = int(self.filter_embedding.size(0) * top_p)
-            top_k = min(top_k, top_k_p)
+            top_k_use = min(top_k, top_k_p)
         if top_k is None:
-            top_k = int(self.filter_embedding.size(0) * top_p)
-        query_embedding = self.model.encode(query, convert_to_tensor=True, normalize_embeddings=True, device=self.filter_embedding.device)
+            top_k_use = int(self.filter_embedding.size(0) * top_p)
+        query_embedding = self.model.encode(query,
+                                            convert_to_tensor=True,
+                                            normalize_embeddings=True,
+                                            device=self.filter_embedding.device,
+                                            show_progress_bar=False)
         scores = torch.nn.functional.cosine_similarity(query_embedding, self.filter_embedding)  # pylint: disable=not-callable
-        sorted_indices = torch.argsort(scores, descending=True)
-        if direction == "bottom":
-            sorted_indices = sorted_indices.flip(0)
-        selected_indices = sorted_indices[:top_k].tolist()
+        descending = direction == "top"
+        sorted_indices = torch.argsort(scores, descending=descending)
+        selected_indices = sorted_indices[:top_k_use].tolist()
         self.filter_embedding = self.filter_embedding[selected_indices]
         self.filter_df = self.filter_df.iloc[selected_indices].reset_index(drop=True)
+        if len(self.filter_df) == 0:
+            logger.warning("No documents found, Resseting Index")
+            self.reset()
+            self.filter(query, top_k, top_p, direction)
         return self.filter_df
 
     def reset(self):
