@@ -30,7 +30,8 @@ def generate_options(model: AutoModelForCausalLM, sequences_ids: list[list[int]]
     past_key_values = None
     all_sequence_options = sequences_ids
     logger.debug(f"step: {step},  {len(all_sequence_options)=}")
-    while len(all_sequence_options) > 0:
+    while len(all_sequence_options) > 1:
+        
         options = [elem[step] for elem in all_sequence_options]
         if len(set(options)) == 1:
             selected = options[0]
