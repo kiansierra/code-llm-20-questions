@@ -8,6 +8,14 @@ wandb_init:
   tags: ["${model_name}", "replay-RAG"]
 
 
+yes_kwargs: 
+  direction: "top"
+  top_p: 0.3
+
+no_kwargs: 
+  direction: "bottom"
+  top_p: 0.9
+
 input_artifact_version: "v2"
 file_name_knowledge: "openai-knowledge-${input_artifact_version}.parquet"
 input_artifact_knowledge:

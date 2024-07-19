@@ -64,6 +64,7 @@ def agent_fn(obs, cfg):
     elif obs.turnType == "answer":
         # pipe.model.disable_adapters()
         yesno_words = ["yes", "no"]
+        pipe.model.disable_adapters()
         yes_no_ids = pipe.tokenizer.convert_tokens_to_ids(yesno_words)
         conversation = prepare_answer_messages(
             keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers

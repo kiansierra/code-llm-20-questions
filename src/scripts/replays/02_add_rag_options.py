@@ -43,11 +43,7 @@ def main(config: DictConfig) -> None:
 
     rag = SentenceTransformerRag(model_name_or_path=config.model_name_or_path, dataframe=knowledge_df)
 
-    yes_kwargs = {"direction": "top", "top_p": 0.3}
-    no_kwargs = {"direction": "bottom", "top_p": 0.9}
-
     new_records = []
-    guess_df = guess_df.query('turnType == "ask"')
     logger.info(f"Processing {len(guess_df)} records")
     for episode_id in guess_df["EpisodeId"].unique():
         rag.reset()
@@ -57,7 +53,7 @@ def main(config: DictConfig) -> None:
             answer = record["answers"][-1]
             keyword = record["keyword"]
 
-            kwargs = yes_kwargs if answer == "yes" else no_kwargs
+            kwargs = config.yes_kwargs if answer == "yes" else config.no_kwargs
             rag.filter(query=f"search_query: {question}", **kwargs)
             if keyword not in rag.filter_df["keyword"].tolist():
                 break
@@ -65,7 +61,10 @@ def main(config: DictConfig) -> None:
 
     rag.reset()
 
-    Path(config.output_dir).mkdir(parents=True, exist_ok=True)
+    save_dir = Path(config.output_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    OmegaConf.save(config, save_dir / "config.yaml")
+    
     rag.to_folder(config.output_dir)
     new_records_df = pd.DataFrame(new_records)
     logger.info(f"Processing {len(new_records_df)} records")
