@@ -8,6 +8,7 @@ def update_input_ids(input_ids: torch.Tensor, next_token: int) -> torch.Tensor:
     return torch.cat([input_ids, selected_tensor], dim=-1)
 
 
+@torch.no_grad()
 def generate_options(model: AutoModelForCausalLM, sequences_ids: list[list[int]], input_ids: torch.Tensor) -> list[int]:
     """
     Chooses one of the  a sequence of options based on a given model, input sequences, and initial input_ids.
@@ -28,7 +29,7 @@ def generate_options(model: AutoModelForCausalLM, sequences_ids: list[list[int]]
     step = 0
     past_key_values = None
     all_sequence_options = sequences_ids
-    logger.info(f"step: {step},  {len(all_sequence_options)=}")
+    logger.debug(f"step: {step},  {len(all_sequence_options)=}")
     while len(all_sequence_options) > 0:
         options = [elem[step] for elem in all_sequence_options]
         if len(set(options)) == 1:
@@ -43,7 +44,7 @@ def generate_options(model: AutoModelForCausalLM, sequences_ids: list[list[int]]
         input_ids = update_input_ids(input_ids, next_token)
         all_sequence_options = [elem for elem in all_sequence_options if elem[step] == next_token]
         step += 1
-        logger.info(f"step: {step},  {len(all_sequence_options)=}")
+        logger.debug(f"step: {step},  {len(all_sequence_options)=}")
         if len(all_sequence_options) == 1:
             return all_sequence_options[0]
         if len(all_sequence_options) == 0:
