@@ -8,6 +8,7 @@ from llm_20q import (SentenceTransformerRag, prepare_answer_messages,
                      prepare_ask_messages, prepare_guess_messages)
 from llm_20q.utils.checkpoints import extract_last_checkpoint
 from llm_20q import generate_options
+from loguru import logger
 
 class LLM20Q:
 
@@ -21,8 +22,8 @@ class LLM20Q:
 
     @classmethod
     def from_folder(cls, folder: Path):
-        pipe = pipeline("text-generation", model=str(folder))
         config = OmegaConf.load(folder / "config.yaml")
+        pipe = pipeline(**config.pipeline, model=str(folder),  tokenizer=str(folder))
         return cls(pipe, config, folder)
 
     def ask(self, obs, cfg):
@@ -64,4 +65,21 @@ class LLM20Q:
         logits = pipe.model(input_ids).logits
         position = logits[0, -1, yes_no_ids].argmax()
         response = yesno_words[position]
+        return response
+    
+    def agent_fn(self, obs, cfg):
+        # if agent is guesser and turnType is "ask"
+        if obs.turnType == "ask":
+            response =  self.ask(obs, cfg)
+            logger.info(f"{obs.step=} ask: {response}")
+        # if agent is guesser and turnType is "guess"
+        elif obs.turnType == "guess":
+            response = self.guess(obs, cfg)
+            logger.info(f"{obs.step=} guess: {response}")
+        # if agent is the answerer
+        elif obs.turnType == "answer":
+            # pipe.model.disable_adapters()
+            response = self.answer(obs, cfg)
+            still_available = obs.keyword in self.rag.filter_df.keyword.tolist()
+            logger.info(f"{obs.step=} answer: {response} -- keyword: {obs.keyword} {still_available=}")
         return response

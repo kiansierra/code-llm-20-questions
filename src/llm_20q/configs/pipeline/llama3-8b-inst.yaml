@@ -2,6 +2,13 @@ model_org: meta-llama
 model_name: Meta-Llama-3-8B-Instruct
 rag_model_name: nomic-embed-text-v1
 
+wandb_init:
+  job_type: "setup-pipeline"
+  tags: ["pipeline", "${model_name}", "${rag_model_name}"]
+
+pipeline:
+  task: 'text-generation'
+
 output_dir: ../checkpoints/${model_name}/pipeline
 
 yes_kwargs: 
@@ -35,4 +42,8 @@ guess_artifact:
 rag_artifact:
   artifact_or_name: "replay-rag-${rag_model_name}:latest"
   type: replay-rag
+
+output_artifact:
+  name: "pipeline-${model_name}"
+  type: "pipeline"
 

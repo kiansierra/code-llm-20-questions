@@ -18,47 +18,45 @@ DATASET_TYPE = "self-play"
 
 @hydra.main(config_path="../llm_20q/configs/pipeline", config_name="llama3-8b-inst", version_base=None)
 def main(config) -> None:
-    model_name = config.model_name
     raw_config = OmegaConf.to_container(config, resolve=True)
-    run = wandb.init(job_type="setup-full-model")
+    run = wandb.init(config=raw_config, **config.wandb_init)
     ask_artifact = run.use_artifact(**config.ask_artifact)
     save_dir = Path(config.output_dir)
-    ask_dir = ask_artifact.download(save_dir / 'ask')
+    save_dir.mkdir(exist_ok=True, parents=True)
+    OmegaConf.save(config, save_dir / "config.yaml")
+    _ = ask_artifact.download(save_dir / 'ask')
     guess_artifact = run.use_artifact(**config.guess_artifact)
-    guess_dir = guess_artifact.download(save_dir / 'guess')
+    _ = guess_artifact.download(save_dir / 'guess')
     rag_artifact = run.use_artifact(**config.rag_artifact)
-    rag_dir = rag_artifact.download(save_dir / 'rag')
+    _ = rag_artifact.download(save_dir / 'rag')
     bnb_config = BitsAndBytesConfig(**config.quantization)
     model_params = {**config.model, "device_map": 'auto'}
     model_params["quantization_config"] = bnb_config
     model = AutoModelForCausalLM.from_pretrained(**model_params)
     tokenizer = AutoTokenizer.from_pretrained(config.model.pretrained_model_name_or_path)
-    
-    pipe = pipeline(task="text-generation", model=model, tokenizer=tokenizer)
+    tokenizer.save_pretrained(save_dir)
+    model.save_pretrained(save_dir)
+    pipe = pipeline(**config.pipeline, model=model, tokenizer=tokenizer)
     model = LLM20Q(pipe, config, save_dir)
     
     def dumb_agent_fn(obs, cfg):
         return "yes"
     
     def agent_fn(obs, cfg):
-    # if agent is guesser and turnType is "ask"
-        if obs.turnType == "ask":
-            response =  model.ask(obs, cfg)
-            logger.info(f"ask: {response}")
-        # if agent is guesser and turnType is "guess"
-        elif obs.turnType == "guess":
-            response = model.guess(obs, cfg)
-            logger.info(f"guess: {response}")
-        # if agent is the answerer
-        elif obs.turnType == "answer":
-            # pipe.model.disable_adapters()
-            response = model.answer(obs, cfg)
-            still_available = obs.keyword in model.rag.filter_df.keyword.tolist()
-            logger.info(f"answer: {response} -- keyword: {obs.keyword} {still_available=}")
-        return response
+        return model.agent_fn(obs, cfg)
     
-    env = make("llm_20_questions", debug=True)
-    game = env.run([agent_fn, agent_fn, dumb_agent_fn, dumb_agent_fn])
+    for num in range(2):
+        logger.info(f"*** Starting Game {num} ***")
+        env = make("llm_20_questions", debug=True)
+        game = env.run([agent_fn, agent_fn, dumb_agent_fn, dumb_agent_fn])
+        if game[-1][0].reward > 0:
+            logger.info(f"*** Game won: {game[-1][0].reward} ***")
+            
+    artifact = wandb.Artifact(**raw_config["output_artifact"])
+    artifact.add_dir(str(save_dir))
+    run.log_artifact(artifact)
+    run.finish()
+
     # print(game)
         
 
