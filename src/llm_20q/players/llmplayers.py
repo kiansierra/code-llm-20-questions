@@ -5,9 +5,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from transformers import TextGenerationPipeline, pipeline
 
-from llm_20q import generate_options
-from llm_20q.utils.checkpoints import extract_last_checkpoint
-
+from ..utils import generate_options, extract_last_checkpoint
 from ..prompts import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from ..types import AnswerType, Observation
 
