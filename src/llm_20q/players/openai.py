@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal, Optional,TypeVar, Generic
 import instructor
 from pydantic import BaseModel, field_validator, model_validator
 from openai import OpenAI
@@ -6,19 +6,20 @@ from typing_extensions import Self
 from ..prompts import prepare_ask_messages, prepare_guess_messages, prepare_answer_messages
 from ..types import AnswerType, Observation
 
+T = TypeVar('T')
 # Define your desired output structure
 class Answer(BaseModel):
     answer: AnswerType
     
 # Define your desired output structure
-class Guess(BaseModel):
-    guess: str
-
+class Guess(BaseModel, Generic[T]):
+    guess: T
     
-def build_options_guess(options:list[str]) -> Guess:
-    class OptionsGuess(BaseModel):
-        guess: Literal[options]
-    return OptionsGuess
+    # This is required to make the tool name short enough
+    class Config:
+        title = "Guess"
+
+
     
 # Define your desired output structure
 class Question(BaseModel):
@@ -51,8 +52,10 @@ class OpenaiPlayer:
     
     def guess(self, obs:Observation, options:Optional[list[str]]=None) -> str:
         messages = prepare_guess_messages(obs.questions, obs.answers, guess=None, options=options)
+        OptionsType = Literal[*options]
+        response_model_cls = Guess[str] if not options else Guess[OptionsType]
         response = self.client.chat.completions.create(
-                response_model=build_options_guess(options) if options else Guess,
+                response_model=response_model_cls,
                 messages=messages,
                 **self.kwargs
             )
@@ -60,7 +63,7 @@ class OpenaiPlayer:
     
     def answer(self, obs:Observation) -> str:
         messages = prepare_answer_messages(
-            keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers
+            keyword=obs.keyword, category=obs.category, questions=obs.questions, answers=obs.answers
         )
         response = self.client.chat.completions.create(
                 response_model=Answer,

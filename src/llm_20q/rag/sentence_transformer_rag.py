@@ -103,7 +103,7 @@ class SentenceTransformerRag:
         self.dataframe.to_parquet(f"{folder_path}/documents.parquet")
         logger.info("Saved embeddings and dataframe to folder")
         self.model.save_pretrained(str(folder_path))
-        with open(f"{folder_path}/config.json", "w", encoding='utf-8') as file:
+        with open(f"{folder_path}/rag-config.json", "w", encoding='utf-8') as file:
             json.dump(self.config.model_dump_json(), file)
 
     @classmethod
@@ -112,9 +112,9 @@ class SentenceTransformerRag:
         embeddings = torch.load(f"{folder_path}/embeddings.pt")
         logger.info(f"Loading documents from {folder_path}")
         dataframe = pd.read_parquet(f"{folder_path}/documents.parquet")
-        with open(f"{folder_path}/config.json", "r", encoding='utf-8') as file:
+        with open(f"{folder_path}/rag-config.json", "r", encoding='utf-8') as file:
             json_config = json.load(file)
-        config = RagConfig(**json_config)
+        config = RagConfig(**eval(json_config))
         return cls(folder_path, config, dataframe, embeddings=embeddings)
 
     def search(self, query: str, top_k: int = 5) -> pd.DataFrame:
