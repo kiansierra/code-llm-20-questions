@@ -16,9 +16,9 @@ class Guess(BaseModel):
 
     
 def build_options_guess(options:list[str]) -> Guess:
-    class Guess(BaseModel):
-        guess: Literal[*options]
-    return Guess(guess='', options=options)
+    class OptionsGuess(BaseModel):
+        guess: Literal[options]
+    return OptionsGuess
     
 # Define your desired output structure
 class Question(BaseModel):
@@ -39,7 +39,7 @@ class OpenaiPlayer:
         self.kwargs = kwargs
         
         
-    def ask(self, obs:Observation, cfg) -> str:
+    def ask(self, obs:Observation) -> str:
         messages = prepare_ask_messages(obs.questions, obs.answers, obs.guesses)
         
         response = self.client.chat.completions.create(
@@ -51,15 +51,14 @@ class OpenaiPlayer:
     
     def guess(self, obs:Observation, options:Optional[list[str]]=None) -> str:
         messages = prepare_guess_messages(obs.questions, obs.answers, guess=None, options=options)
-        
         response = self.client.chat.completions.create(
-                response_model=Guess,
+                response_model=build_options_guess(options) if options else Guess,
                 messages=messages,
                 **self.kwargs
             )
         return response.guess
     
-    def answer(self, obs:Observation, cfg) -> str:
+    def answer(self, obs:Observation) -> str:
         messages = prepare_answer_messages(
             keyword=obs["keyword"], category=obs["category"], questions=obs.questions, answers=obs.answers
         )

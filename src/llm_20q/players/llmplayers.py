@@ -12,7 +12,7 @@ from llm_20q import generate_options
 from loguru import logger
 from ..types import Observation, AnswerType
 
-class LLM20Q:
+class LLMPlayer:
 
     def __init__(self, pipe: TextGenerationPipeline, config:DictConfig, folder: Path):
         self.pipe = pipe

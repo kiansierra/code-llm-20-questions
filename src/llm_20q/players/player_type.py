@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Protocol
 from ..types import Observation, AnswerType
 from ..rag import SentenceTransformerRag
 
