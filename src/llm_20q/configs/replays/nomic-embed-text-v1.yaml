@@ -8,13 +8,11 @@ wandb_init:
   tags: ["${model_name}", "replay-RAG"]
 
 
-yes_kwargs: 
-  direction: "top"
+rag_config:
+  embedding_type: ${model_name}
+  min_kw: 100
   top_p: 0.3
-
-no_kwargs: 
-  direction: "bottom"
-  top_p: 0.9
+  bottom_p: 0.9
 
 input_artifact_version: "v2"
 file_name_knowledge: "openai-knowledge-${input_artifact_version}.parquet"
