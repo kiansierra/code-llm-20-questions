@@ -1,0 +1,35 @@
+model_entity: nomic-ai
+model_name: nomic-embed-text-v1
+model_name_or_path: ${model_entity}/${model_name}
+
+wandb_init:
+  job_type: "generate-RAG"
+  tags: ["RAG", "knowledge", "${model_name}"]
+
+
+rag_config:
+  embedding_type: ${model_name}
+  min_kw: 100
+  top_p: 0.3
+  bottom_p: 0.9
+  
+# input_model:
+#   artifact_or_name: "rag-${model_name}:latest"
+#   type: model-rag
+
+
+version: "v2"
+
+output_artifact:
+  name: "rag-knowledge-${version}"
+  type: "rag-knowledge"
+  metadata: 
+    model_name: ${model_name}
+
+file_name: "openai-knowledge-${version}.parquet"
+input_artifact:
+  artifact_or_name: "openai-knowledge-${version}:latest"
+  type:  "openai-synthetic"
+
+
+
