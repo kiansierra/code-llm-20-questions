@@ -6,7 +6,7 @@ from sklearn.model_selection import GroupKFold
 from kaggle_environments import make
 import wandb
 from llm_20q.data import build_game_records
-from llm_20q.model import LLM20Q
+from llm_20q.agent import LLM20Q
 from omegaconf import OmegaConf
 from loguru import logger
 load_dotenv()

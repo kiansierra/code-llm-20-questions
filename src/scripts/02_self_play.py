@@ -12,7 +12,7 @@ from transformers import BitsAndBytesConfig, pipeline
 import wandb
 from llm_20q.prompts.prompt_templates import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 from llm_20q.utils import extract_last_checkpoint
-from llm_20q.model import LLM20Q
+from llm_20q.agent import LLM20Q
 
 OUTPUT_DATASET_NAME = "self-play-records"
 DATASET_TYPE = "self-play"
