@@ -16,7 +16,7 @@ from llm_20q import generate_prompt
 load_dotenv()
 
 
-@hydra.main(config_path="llm_20q/configs", config_name="llama3-8b-inst-ask", version_base=None)
+@hydra.main(config_path="llm_20q/configs", config_name="llama3.1-8b-inst-ask", version_base=None)
 def main(config: DictConfig) -> None:
     state = PartialState()
     model_id = config.model.pretrained_model_name_or_path
