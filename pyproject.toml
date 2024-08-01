@@ -7,7 +7,7 @@
 # character.
 
 [tool.black]
-line-length = 119
+line-length = 140
 target-version = ['py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
@@ -62,7 +62,7 @@ strict_optional = true
 
 
 [tool.flake8]
-max-line-length = 120
+max-line-length = 140
 exclude =['.git','__pycache__','docs/source/conf.py','build','dist','tests', '__init__.py']
 ignore = ['I101','D100','D101','D102','D103','D104','D105','D107','D401','E203','I900','N802','N806','N812','W503','S311','S605','S607']
 per-file-ignores = "src/llm_prompt/formatters.py:E501"
@@ -104,6 +104,6 @@ exclude = [
     "__init__.py"
 ]
 
-line-length = 120
+line-length = 140
 [tool.ruff.lint.per-file-ignores]
 "src/llm_20q/model.py" = ["E501"]

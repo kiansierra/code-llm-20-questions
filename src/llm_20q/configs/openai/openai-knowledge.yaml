@@ -1,0 +1,25 @@
+generate_kwargs:
+  model: gpt-4o
+  timeout: 60
+  temperature: 0.8
+  n : 1
+
+wandb_init:
+  job_type: "generate-knowledge"
+  tags: ["openai", "answers", "${generate_kwargs.model}"]
+
+version: "v2"
+
+input_file_name: "openai-answers-${version}.parquet"
+input_artifact_answers:
+  artifact_or_name: "openai-answers-${version}:latest"
+  type: "openai-synthetic"
+
+output_file_name: "openai-knowledge-${version}.parquet"
+output_artifact:
+  name: "openai-knowledge-${version}"
+  type: "openai-synthetic"
+  metadata: 
+    model_name: ${generate_kwargs.model}
+
+

@@ -9,7 +9,7 @@ __all__ = ["build_game_records", "build_df", "TaskType"]
 TaskType = Literal["ask", "answer", "guess"]
 
 
-def build_game_records(folder: str, reward:bool=True) -> list[dict]:
+def build_game_records(folder: str, reward: bool = True) -> list[dict]:
     """
     Builds a dataset of winning games from JSON files in the specified folder.
 
@@ -29,7 +29,8 @@ def build_game_records(folder: str, reward:bool=True) -> list[dict]:
             game = json.load(f)
         end_step = game["steps"][-1]
         for elem in end_step:
-            if "keyword" in elem["observation"] and ((elem["reward"] and elem["reward"] > 0) or  not reward) :
+            reward_condition = (elem["reward"] and elem["reward"] > 0) or not reward
+            if "keyword" in elem["observation"] and reward_condition and elem['action']:
                 data = {**elem["observation"]}
                 data["reward"] = elem["reward"]
                 data = {**data, **game["info"]}
@@ -51,7 +52,7 @@ def build_question_df(games: list[dict]) -> pd.DataFrame:
     games_df = pd.DataFrame(games)
     games_df["position"] = games_df.apply(lambda x: list(range(len(x["questions"]))), axis=1)
     games_df = games_df.explode("position").reset_index(drop=True)
-    games_df["question"] = games_df.apply(lambda x: x["questions"][x["position"]], axis=1)
+    games_df["question"] = games_df.apply(lambda x: x["questions"][x["position"]], axis=1).str.strip()
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"]], axis=1)
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"]], axis=1)
@@ -67,7 +68,7 @@ def build_answers_df(games: list[dict]) -> pd.DataFrame:
     games_df = games_df.query("position < max_position-1").reset_index(drop=True)
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"] + 1], axis=1)
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
-    games_df["answer"] = games_df.apply(lambda x: x["answers"][x["position"]], axis=1)
+    games_df["answer"] = games_df.apply(lambda x: x["answers"][x["position"]], axis=1).str.strip()
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"]], axis=1)
     return games_df
 
@@ -81,7 +82,7 @@ def build_guesses_df(games: list[dict]) -> pd.DataFrame:
     games_df = games_df.query("position < max_position-1").reset_index(drop=True)
     games_df["questions"] = games_df.apply(lambda x: x["questions"][: x["position"] + 1], axis=1)
     games_df["answers"] = games_df.apply(lambda x: x["answers"][: x["position"] + 1], axis=1)
-    games_df["guess"] = games_df.apply(lambda x: x["guesses"][x["position"]], axis=1)
+    games_df["guess"] = games_df.apply(lambda x: x["guesses"][x["position"]], axis=1).str.strip()
     games_df["guesses"] = games_df.apply(lambda x: x["guesses"][: x["position"]], axis=1)
     return games_df
 

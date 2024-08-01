@@ -1,9 +1,7 @@
 import itertools
-from typing import Literal, Optional
+from typing import Optional
 
-from transformers import Conversation
-
-AnswerType = Literal["yes", "no"]
+from ..types import AnswerType, ConversationType
 
 ANSWER_SYSTEM_PROMPT = """You are playing the 20 questions game, you are in charge of responding to the user's questions.
 The user will try to guess the object you're thinking of by asking yes/no questions.
@@ -33,17 +31,22 @@ Answer: 'yes'
 Guess: 'nelson mandela'
 """
 
-GUESS_PROMPT = """What is your guess? """
+GUESS_PROMPT = """What is your guess?"""
+
+GUESS_PROMPT_OPTIONS = """What is your guess? Chose one of the following options: {options}"""
+
+__all__ = ["prepare_guess_messages", "prepare_answer_messages", "prepare_ask_messages"]
 
 
 def prepare_guess_messages(
     questions: list[str],
     answers: list[AnswerType],
-    guesses: list[str],
+    guess: Optional[str] = None,
+    options: Optional[list[str]] = None,
     guess_system_prompt: str = GUESS_SYSTEM_PROMPT,
     guess_prompt: str = GUESS_PROMPT,
-    uuid: Optional[str] = None,
-):
+    guess_prompt_options: str = GUESS_PROMPT_OPTIONS,
+) -> ConversationType:
     """
     Prepares a conversation with messages for the guessing system.
 
@@ -53,24 +56,23 @@ def prepare_guess_messages(
         guesses (list[str]): List of guesses made by the user.
         guess_system_prompt (str, optional): System prompt for the guessing system. Defaults to GUESS_SYSTEM_PROMPT.
         guess_prompt (str, optional): Prompt for the user to make a guess. Defaults to GUESS_PROMPT.
-        uuid (str, optional): Unique identifier for the conversation. Defaults to None.
 
     Returns:
-        Conversation: A Conversation object containing the prepared messages.
+        Conversation: A ConversationType object containing the prepared messages.
 
     """
 
     messages = [{"role": "system", "content": guess_system_prompt}]
-    for question, answer, guess in itertools.zip_longest(questions, answers, guesses):
+    assert len(questions) == len(answers), "Questions and answers must have the same length"
+    for question, answer in zip(questions, answers):
         messages.append({"role": "user", "content": question})
-        if answer:
-            messages.append({"role": "assistant", "content": answer})
-        else:
-            messages.append({"role": "assistant", "content": ""})
-        if guess:
-            messages.append({"role": "user", "content": guess_prompt})
-            messages.append({"role": "assistant", "content": guess})
-    return Conversation(messages=messages, conversation_id=uuid)
+        messages.append({"role": "assistant", "content": answer})
+
+    guess_prompt_message = guess_prompt if options is None else guess_prompt_options.format(options=", ".join(options))
+    messages.append({"role": "user", "content": guess_prompt_message})
+    if guess:
+        messages.append({"role": "assistant", "content": guess})
+    return messages
 
 
 def prepare_answer_messages(
@@ -79,7 +81,6 @@ def prepare_answer_messages(
     questions: list[str],
     answers: list[AnswerType],
     answer_system_prompt: str = ANSWER_SYSTEM_PROMPT,
-    uuid: Optional[str] = None,
 ):
     """
     Prepares a conversation with messages for answering a specific keyword.
@@ -93,7 +94,7 @@ def prepare_answer_messages(
         uuid (str, optional): The unique identifier for the conversation. Defaults to None.
 
     Returns:
-        Conversation: A Conversation object containing the prepared messages.
+        Conversation: A ConversationType object containing the prepared messages.
     """
 
     messages = [{"role": "system", "content": answer_system_prompt.format(keyword=keyword, category=category)}]
@@ -101,7 +102,7 @@ def prepare_answer_messages(
         messages.append({"role": "user", "content": question})
         if answer:
             messages.append({"role": "assistant", "content": answer})
-    return Conversation(messages=messages, conversation_id=uuid)
+    return messages
 
 
 def prepare_ask_messages(
@@ -109,8 +110,7 @@ def prepare_ask_messages(
     answers: list[AnswerType],
     guesses: list[str],
     question_system_prompt: str = QUESTION_SYSTEM_PROMPT,
-    uuid: Optional[str] = None,
-) -> Conversation:
+) -> ConversationType:
     """
     Prepares a conversation object for the "ask" phase of the 20 Questions game.
 
@@ -122,10 +122,9 @@ def prepare_ask_messages(
             Defaults to QUESTION_SYSTEM_PROMPT.
         guess_prompt (str, optional): The prompt for asking the user to make a guess.
             Defaults to GUESS_PROMPT.
-        uuid (str, optional): The unique identifier for the conversation. Defaults to None.
 
     Returns:
-        Conversation: A conversation object containing the messages exchanged between the assistant and the user.
+        Conversation: A ConversationType containing the messages exchanged between the assistant and the user.
     """
 
     messages = [
@@ -140,4 +139,4 @@ def prepare_ask_messages(
             messages.append({"role": "assistant", "content": guess})
             messages.append({"role": "user", "content": "Please ask you're next question."})
 
-    return Conversation(messages=messages, conversation_id=uuid)
+    return messages

@@ -1,6 +1,6 @@
 """List of keywords for 20 Questions."""
 
-KEYWORDS_JSON = """
+KEYWORDS_JSON_V1 = """
 [
   {
     "category": "country",

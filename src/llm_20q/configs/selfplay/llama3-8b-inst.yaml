@@ -1,0 +1,19 @@
+model_org: meta-llama
+model_name: Meta-Llama-3-8B-Instruct
+rag_model_name: nomic-embed-text-v1
+
+wandb_init:
+  job_type: "selfplay-pipeline"
+  tags: ["selfplay", "${model_name}", "${rag_model_name}"]
+
+num_games: 10
+
+pipeline_artifact:
+  artifact_or_name: "pipeline-${model_name}:latest"
+  type: "pipeline"
+
+output_artifact:
+  name: "selfplay-${model_name}"
+  type: selfplay
+  metadata: 
+    model_name: ${model_name}

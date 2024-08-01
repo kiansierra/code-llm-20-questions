@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from loguru import logger
 from dotenv import load_dotenv
 from sklearn.model_selection import GroupKFold
 
@@ -33,6 +33,7 @@ def main() -> None:
     for task in ["ask", "answer", "guess"]:
         task_df = build_df(game_records, task)
         task_df = build_folds(task_df)
+        logger.info(f"{task=} dataset size {len(task_df)=}")
         save_path = save_folder / f"{task}.parquet"
         task_df.to_parquet(save_path)
         artifact = wandb.Artifact(f"{OUTPUT_DATASET_NAME}-{task}", type=DATASET_TYPE)

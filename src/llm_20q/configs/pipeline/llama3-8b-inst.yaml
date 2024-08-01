@@ -1,0 +1,49 @@
+model_org: meta-llama
+model_name: Meta-Llama-3-8B-Instruct
+rag_model_name: nomic-embed-text-v1
+
+wandb_init:
+  job_type: "setup-pipeline"
+  tags: ["pipeline", "${model_name}", "${rag_model_name}"]
+
+pipeline:
+  task: 'text-generation'
+
+output_dir: ../checkpoints/${model_name}/pipeline
+
+yes_kwargs: 
+  direction: "top"
+  top_p: 0.3
+
+no_kwargs: 
+  direction: "bottom"
+  top_p: 0.9
+
+model: 
+  pretrained_model_name_or_path: ${model_org}/${model_name}
+  torch_dtype: ${dtype:bf16}
+  attn_implementation: flash_attention_2
+
+quantization:
+  load_in_4bit: True
+  bnb_4bit_quant_type: "nf4"
+  bnb_4bit_compute_dtype: ${dtype:bf16}
+  bnb_4bit_use_double_quant: True
+
+
+ask_artifact:
+  artifact_or_name: "sft-ask-${model_name}:latest"
+  type: model-sft
+
+guess_artifact:
+  artifact_or_name: "sft-guess-${model_name}:latest"
+  type: model-sft
+
+rag_artifact:
+  artifact_or_name: "replay-rag-${rag_model_name}:latest"
+  type: replay-rag
+
+output_artifact:
+  name: "pipeline-${model_name}"
+  type: "pipeline"
+

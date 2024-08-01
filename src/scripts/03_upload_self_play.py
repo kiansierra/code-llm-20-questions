@@ -13,7 +13,6 @@ INPUT_DATASET_NAME = "self-play-records"
 DATASET_TYPE = "self-play"
 
 
-
 def build_folds(df, n_splits=5):
     group_kfold = GroupKFold(n_splits=n_splits)
     groups = df["EpisodeId"]
@@ -22,7 +21,6 @@ def build_folds(df, n_splits=5):
         df.loc[test_index, "split"] = "validation" if num == 0 else "train"
 
     return df
-
 
 
 @hydra.main(config_path="../llm_20q/configs", config_name="llama3-8b-inst", version_base=None)
@@ -35,6 +33,7 @@ def main(config) -> None:
     assert list(path.glob("*.json")), f"No game records found in {path} directory."
     game_records = build_game_records(folder=str(path), reward=False)
     print(game_records)
+
 
 if __name__ == "__main__":
     main()
