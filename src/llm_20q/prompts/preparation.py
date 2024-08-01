@@ -1,5 +1,7 @@
-from transformers import PreTrainedTokenizer
 import random
+
+from transformers import PreTrainedTokenizer
+
 from ..types import TaskType
 from .prompt_templates import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
 

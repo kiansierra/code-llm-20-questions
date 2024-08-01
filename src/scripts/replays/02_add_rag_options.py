@@ -64,7 +64,7 @@ def main(config: DictConfig) -> None:
     save_dir = Path(config.output_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     OmegaConf.save(config, save_dir / "config.yaml")
-    
+
     rag.to_folder(config.output_dir)
     new_records_df = pd.DataFrame(new_records)
     logger.info(f"Processing {len(new_records_df)} records")

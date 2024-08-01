@@ -1,20 +1,20 @@
 from pathlib import Path
 from typing import List, Optional
 
-from omegaconf import DictConfig, OmegaConf
 import torch
+from omegaconf import DictConfig, OmegaConf
 from transformers import TextGenerationPipeline, pipeline
 
-from ..rag import SentenceTransformerRag
-from ..prompts import prepare_ask_messages, prepare_guess_messages, prepare_answer_messages
-from llm_20q.utils.checkpoints import extract_last_checkpoint
 from llm_20q import generate_options
-from loguru import logger
-from ..types import Observation, AnswerType
+from llm_20q.utils.checkpoints import extract_last_checkpoint
+
+from ..prompts import prepare_answer_messages, prepare_ask_messages, prepare_guess_messages
+from ..types import AnswerType, Observation
+
 
 class LLMPlayer:
 
-    def __init__(self, pipe: TextGenerationPipeline, config:DictConfig, folder: Path):
+    def __init__(self, pipe: TextGenerationPipeline, config: DictConfig, folder: Path):
         self.pipe = pipe
         self.eoq_tokens = pipe.tokenizer.convert_tokens_to_ids(["<|eot_id|>", "?", "?."])
         pipe.model.load_adapter(extract_last_checkpoint(folder / "ask"), adapter_name="ask")
@@ -24,22 +24,21 @@ class LLMPlayer:
     @classmethod
     def from_folder(cls, folder: Path):
         config = OmegaConf.load(folder / "config.yaml")
-        pipe = pipeline(**config.pipeline, model=str(folder),  tokenizer=str(folder))
+        pipe = pipeline(**config.pipeline, model=str(folder), tokenizer=str(folder))
         return cls(pipe, config, folder)
 
-    def ask(self, obs:Observation) -> str:
+    def ask(self, obs: Observation) -> str:
         # if agent is guesser and turnType is "ask"
         self.pipe.model.set_adapter("ask")
         conversation = prepare_ask_messages(obs.questions, obs.answers, obs.guesses)
         text = self.pipe.tokenizer.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
         output = self.pipe(text, eos_token_id=self.eoq_tokens)
-        response = output[0]['generated_text'].replace(text, '').strip()
+        response = output[0]["generated_text"].replace(text, "").strip()
         return response
 
-    def guess(self, obs:Observation, options:Optional[List[str]]=None) -> str:
+    def guess(self, obs: Observation, options: Optional[List[str]] = None) -> str:
         # if agent is guesser and turnType is "guess"
         self.pipe.model.set_adapter("guess")
-        answer = obs.answers[-1]
         conversation = prepare_guess_messages(obs.questions, obs.answers, obs.guesses, options=options)
         options_input_ids = self.pipe.tokenizer(options, add_special_tokens=False).input_ids
         input_ids = self.pipe.tokenizer.apply_chat_template(conversation, tokenize=True, add_generation_prompt=True, return_tensors="pt")

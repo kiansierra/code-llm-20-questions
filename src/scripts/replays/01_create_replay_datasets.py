@@ -1,6 +1,7 @@
 from pathlib import Path
-from loguru import logger
+
 from dotenv import load_dotenv
+from loguru import logger
 from sklearn.model_selection import GroupKFold
 
 import wandb
