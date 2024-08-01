@@ -131,7 +131,7 @@ class SentenceTransformerRag:
         self,
         query: str,
         direction: Literal["top", "bottom"] = "top"
-    ) -> pd.DataFrame:
+    ) -> None:
         query = fix_query_rag(self.config.embedding_type)(query)
         if direction not in ["top", "bottom"]:
             raise ValueError("direction must be either 'top' or 'bottom'")
@@ -153,7 +153,10 @@ class SentenceTransformerRag:
             logger.warning("No documents found, Resseting Index")
             self.reset()
             self.filter(query, direction)
-        return self.filter_df
+
+    
+    def retrieve_options(self, num_options: int) -> list[str]:
+        return self.filter_df['keyword'].tolist()[:num_options]
     
     def remove_guess(self, keyword: str) -> None:
         if keyword not in self.filter_df["keyword"].tolist():
