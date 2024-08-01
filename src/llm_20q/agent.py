@@ -4,6 +4,8 @@ from .players import Player
 from .rag import SentenceTransformerRag
 from .types import Observation
 
+def dumb_agent_fn(obs, cfg):
+    return "yes"
 
 class LLM20Q:
 

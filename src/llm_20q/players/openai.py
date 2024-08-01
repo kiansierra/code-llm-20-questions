@@ -50,9 +50,8 @@ class OpenaiPlayer:
 
     def guess(self, obs: Observation, options: Optional[list[str]] = None) -> str:
         messages = prepare_guess_messages(obs.questions, obs.answers, guess=None, options=options)
-        OptionsType = Literal[*options]
-        response_model_cls = Guess[str] if not options else Guess[OptionsType]
-        response = self.client.chat.completions.create(response_model=response_model_cls, messages=messages, **self.kwargs)
+        OptionsType = Literal[*options] if options else str
+        response = self.client.chat.completions.create(response_model=Guess[OptionsType], messages=messages, **self.kwargs)
         return response.guess
 
     def answer(self, obs: Observation) -> str:
