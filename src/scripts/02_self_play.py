@@ -7,11 +7,10 @@ from kaggle_environments import make
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
-from llm_20q.agent import LLM20Q
+from llm_20q.agent import LLM20Q, dumb_agent_fn
 
-OUTPUT_DATASET_NAME = "self-play-records"
-DATASET_TYPE = "self-play"
-
+# FIXME: Update LLM20Q to load with agent and rag
+# TODO: Configuragle different agents for self play
 
 @hydra.main(config_path="../llm_20q/configs/selfplay", config_name="llama3-8b-inst", version_base=None)
 def main(config: DictConfig) -> None:
@@ -23,8 +22,6 @@ def main(config: DictConfig) -> None:
     save_folder = Path(f"../input/self-play/{config.model_name}")
     save_folder.mkdir(parents=True, exist_ok=True)
 
-    def dumb_agent_fn(obs, cfg):
-        return "yes"
 
     for _ in range(config.num_games):
         env = make("llm_20_questions", debug=True)

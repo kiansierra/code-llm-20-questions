@@ -12,8 +12,10 @@ from llm_20q import RagConfig, SentenceTransformerRag, extract_last_checkpoint
 
 load_dotenv()
 
+# TODO: Update Rag Model to use saved checkpoint
 
-@hydra.main(config_path="../llm_20q/configs/rag-models", config_name="rag-model", version_base=None)
+
+@hydra.main(config_path="../llm_20q/configs/rag-models", config_name="nomic-embed-text-v1", version_base=None)
 def main(config: DictConfig):
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(**config.wandb_init, config=raw_config)

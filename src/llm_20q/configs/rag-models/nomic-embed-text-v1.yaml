@@ -21,7 +21,7 @@ rag_config:
 version: "v2"
 
 output_artifact:
-  name: "rag-knowledge-${version}"
+  name: "rag-${model_name}-${version}"
   type: "rag-knowledge"
   metadata: 
     model_name: ${model_name}
