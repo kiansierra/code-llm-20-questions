@@ -7,18 +7,28 @@ from kaggle_environments import make
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
+from wandb.sdk.wandb_run import Run
 from llm_20q.agent import LLM20Q, dumb_agent_fn
+from llm_20q.players import LLMPlayer, OpenaiPlayer, Player
 
 # FIXME: Update LLM20Q to load with agent and rag
 # TODO: Configuragle different agents for self play
+
+def build_player(config: DictConfig, run:Run) -> Player:
+    if config.player_type == "openai":
+        return OpenaiPlayer(**config.player_kwargs)
+    artifact = run.use_artifact(**config.pipeline_artifact)
+    artifact_dir = artifact.download()
+    llm20q = LLMPlayer.from_folder(artifact_dir)
+    return llm20q
+
 
 @hydra.main(config_path="../llm_20q/configs/selfplay", config_name="llama3-8b-inst", version_base=None)
 def main(config: DictConfig) -> None:
     raw_config = OmegaConf.to_container(config, resolve=True)
     run = wandb.init(config=raw_config, **config.wandb_init)
-    artifact = run.use_artifact(**config.pipeline_artifact)
-    artifact_dir = artifact.download()
-    llm20q = LLM20Q.from_folder(Path(artifact_dir))
+    player = build_player(config, run)
+    llm20q = LLM20Q(player)
     save_folder = Path(f"../input/self-play/{config.model_name}")
     save_folder.mkdir(parents=True, exist_ok=True)
 
